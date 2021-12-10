@@ -1,0 +1,19 @@
+{
+  "name": "etcd_viewer",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www",
+    "lint": "./node_modules/.bin/eslint .."
+  },
+  "dependencies": {
+    "ajv": "~5.2.0",
+    "angular": "latest",
+    "etcd3": "^1.1.0",
+    "express": "^4.16.3",
+    "nconf": "~0.7.1"
+  },
+  "devDependencies": {
+    "eslint": "6.5.1"
+  }
+}
