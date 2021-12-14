@@ -47,7 +47,6 @@ function auth(req, res) {
   return (auth[1] === authUser && auth[2] === authPass)
 }
 
-
 // redirect requests to etcd-server
 function proxy(client_req, client_res) {
   let opts = {
@@ -64,27 +63,26 @@ function proxy(client_req, client_res) {
     opts.cert = fs.readFileSync(certFile);
   }
 
-  console.log(client_req.url);
+  // console.log(client_req.url);
   if (client_req.method === 'GET') {
-    const regex = /\/.*\/keys$/;
+    const regex = /\/.*\/keys\/$/;
     if (regex.test(client_req.url)) {
       etcdApi.getAll(opts, client_res);
     } else {
       const regex = /\/.*\/keys\/(.*)/;
       const match = regex.exec(client_req.url);
-      console.log(match);
       if (match) {
-        etcdApi.get(opts, match[0], client_res);
+        etcdApi.get(opts, match[1], client_res);
       }
     }
   } else if (client_req.method === 'PUT') {
     const regex = /\/.*\/keys\/(.*)\?value=(.*)/;
     const match = regex.exec(client_req.url);
-    console.log(match);
     if (match) {
-      etcdApi.put(opts, match[0], match[1], client_res);
+      etcdApi.put(opts, match[1], match[2], client_res);
     }
   }
+  // Old etcdv2 processing
   // client_req.pipe(requester(opts, function(res) {
   //   // if etcd returns that the requested  page has been moved
   //   // to a different location, indicates that the node we are
