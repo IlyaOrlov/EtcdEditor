@@ -40,7 +40,7 @@ async function getAll(options, client_res) {
 
 async function get(options, key, client_res) {
     const etcdClient = new Etcd3();
-    let val = await etcdClient.get(key);
+    let val = await etcdClient.get(key).string();
 
     let res = {
         "action": "get",
@@ -76,8 +76,28 @@ async function put(options, key, val, client_res) {
     client_res.end(JSON.stringify(res));
 }
 
+async function del(options, key, client_res) {
+    const etcdClient = new Etcd3();
+    let status = await etcdClient.delete().key(key);
+    console.log(status);
+    let res = {
+        "action": "delete",
+        "node": {
+            "key": "/" + key
+        },
+        "prevNode": {
+            "key": "/" + key
+        }
+    };
+    console.log(JSON.stringify(res));
+
+    client_res.writeHead(200, 'Success', headers);
+    client_res.end(JSON.stringify(res));
+}
+
 module.exports = {
     getAll: getAll,
     get: get,
-    put: put
+    put: put,
+    del: del
 };
