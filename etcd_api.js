@@ -10,13 +10,13 @@ const headers = {
 
 async function getAll(options, client_res) {
     const etcdClient = new Etcd3();
-    let keys = await etcdClient.getAll().keys();
+    let kvs = await etcdClient.getAll().all();
     let nodes = [];
 
-    for (let key_idx in keys) {
+    for (let idx in kvs) {
         let key =  {
-            "key": '/' + keys[key_idx],
-            "value": "",
+            "key": '/' + idx,
+            "value": kvs[idx],
             "modifiedIndex": 0,
             "createdIndex": 0
         };
@@ -59,8 +59,8 @@ async function get(options, key, client_res) {
 
 async function put(options, key, val, client_res) {
     const etcdClient = new Etcd3();
-    let status = etcdClient.put(key).value(val);
-    console.log(status);
+    let status = await etcdClient.put(key).value(val);
+
     let res = {
         "action": "set",
         "node": {
@@ -79,7 +79,7 @@ async function put(options, key, val, client_res) {
 async function del(options, key, client_res) {
     const etcdClient = new Etcd3();
     let status = await etcdClient.delete().key(key);
-    console.log(status);
+
     let res = {
         "action": "delete",
         "node": {
