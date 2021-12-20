@@ -1,6 +1,7 @@
 const { Etcd3 } = require('etcd3');
 const headers = {
     "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
     "X-Etcd-Cluster-Id": "7e27652122e8b2ae",
     "X-Etcd-Index": 0,
     'X-Raft-Index': 0,
