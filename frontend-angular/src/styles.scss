@@ -1,0 +1,15 @@
+/* You can add global styles to this file, and also import other style files */
+@import "~jsoneditor/dist/jsoneditor.min.css";
+
+html, body {
+  height: 100%;
+  font-family: arial;
+}
+
+body {
+  margin: 0;
+}
+
+div, span, button, text {
+  font-family: arial;
+}

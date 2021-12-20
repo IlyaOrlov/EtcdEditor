@@ -1,0 +1,15 @@
+<div class='container'>
+  <div class='sidebar'>
+    <div class="sidebar__header">Config Editor</div>
+    <div class="sidebar__content ">
+      <app-nodes-tree [nodes]="nodes | async"
+                      (onSelectNode)="selectNode($event)"
+                      class="nodes-tree">
+      </app-nodes-tree>
+    </div>
+  </div>
+  <div class='main'>
+    <app-editor [node]="selectedNode">
+    </app-editor>
+  </div>
+</div>
