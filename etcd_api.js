@@ -10,13 +10,13 @@ const headers = {
 
 async function getAll(options, client_res) {
     const etcdClient = new Etcd3();
-    let keys = await etcdClient.getAll().keys();
+    let kvs = await etcdClient.getAll().all();
     let nodes = [];
 
-    for (let key_idx in keys) {
+    for (let idx in kvs) {
         let key =  {
-            "key": '/' + keys[key_idx],
-            "value": "",
+            "key": '/' + idx,
+            "value": kvs[idx],
             "modifiedIndex": 0,
             "createdIndex": 0
         };
@@ -40,7 +40,7 @@ async function getAll(options, client_res) {
 
 async function get(options, key, client_res) {
     const etcdClient = new Etcd3();
-    let val = await etcdClient.get(key);
+    let val = await etcdClient.get(key).string();
 
     let res = {
         "action": "get",
@@ -59,8 +59,8 @@ async function get(options, key, client_res) {
 
 async function put(options, key, val, client_res) {
     const etcdClient = new Etcd3();
-    let status = etcdClient.put(key).value(val);
-    console.log(status);
+    let status = await etcdClient.put(key).value(val);
+
     let res = {
         "action": "set",
         "node": {
@@ -76,8 +76,28 @@ async function put(options, key, val, client_res) {
     client_res.end(JSON.stringify(res));
 }
 
+async function del(options, key, client_res) {
+    const etcdClient = new Etcd3();
+    let status = await etcdClient.delete().key(key);
+
+    let res = {
+        "action": "delete",
+        "node": {
+            "key": "/" + key
+        },
+        "prevNode": {
+            "key": "/" + key
+        }
+    };
+    console.log(JSON.stringify(res));
+
+    client_res.writeHead(200, 'Success', headers);
+    client_res.end(JSON.stringify(res));
+}
+
 module.exports = {
     getAll: getAll,
     get: get,
-    put: put
+    put: put,
+    del: del
 };
