@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {Component, EventEmitter, Input, OnChanges, Output} from '@angular/core';
 import { ConfigNode } from 'src/app/app.types';
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
@@ -8,7 +8,7 @@ import { MatTreeNestedDataSource } from '@angular/material/tree';
   templateUrl: './nodes-tree.component.html',
   styleUrls: ['./nodes-tree.component.scss']
 })
-export class NodesTreeComponent {
+export class NodesTreeComponent implements OnChanges {
   @Input() nodes: ConfigNode[] | null = null;
   @Output() onSelectNode: EventEmitter<ConfigNode> = new EventEmitter();
 
@@ -18,7 +18,7 @@ export class NodesTreeComponent {
 
   hasChild = (_: number, node: ConfigNode) => !!node.nodes && node.nodes.length > 0;
 
-  ngOnInit(): void {
+  ngOnChanges(): void {
     if (this.nodes) {
       this.dataSource.data = this.nodes;
     }
