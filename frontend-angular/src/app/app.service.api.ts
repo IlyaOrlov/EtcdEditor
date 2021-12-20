@@ -6,7 +6,7 @@ import { ConfigNode, ConfigResponse } from './app.types';
 @Injectable()
 export class AppApiService {
 
-  private baseUrl: string = 'localhost';
+  private baseUrl: string = '/api';
 
   constructor(private http: HttpClient) {}
 
