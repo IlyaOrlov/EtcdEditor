@@ -36,14 +36,14 @@ export class EditorComponent implements OnChanges, OnDestroy {
 
   submit(): void {
     if (this.canSave()) {
-      this.appService.saveNode(this.form.controls.configNode.value)
+      this.appService.saveNode(this.node.key, this.form.controls.configNode.value)
         .pipe(takeUntil(this.destroy))
         .subscribe();
     }
   }
 
   cancel(): void {
-
+    this.data = this.node?.value;
   }
 
   ngOnDestroy() {

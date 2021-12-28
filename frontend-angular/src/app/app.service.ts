@@ -13,8 +13,8 @@ export class AppService {
     return this.apiService.getNodes().pipe(map((response) => [response.node]));
   }
 
-  saveNode(node: ConfigNode): Observable<void> {
-    return this.apiService.saveNode(node);
+  saveNode(key: string, node?: ConfigNode): Observable<void> {
+    return this.apiService.saveNode(key, node);
   }
 
 }

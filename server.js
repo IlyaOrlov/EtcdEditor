@@ -64,6 +64,7 @@ function proxy(client_req, client_res) {
     }
 
     console.log(client_req.url);
+    console.log(client_req.method);
     if (client_req.method === 'GET') {
         const regex = /\/.*\/keys\/$/;
         if (regex.test(client_req.url)) {

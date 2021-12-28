@@ -1,8 +1,11 @@
 import { NgModule } from '@angular/core';
 import { MatTreeModule } from '@angular/material/tree';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button'
 import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { NgJsonEditorModule } from 'ang-jsoneditor';
 
 import { AppComponent } from './app.component';
@@ -26,11 +29,14 @@ import {MAT_RIPPLE_GLOBAL_OPTIONS} from "@angular/material/core";
     FormsModule,
     ReactiveFormsModule,
     BrowserModule,
+    BrowserAnimationsModule,
     HttpClientModule,
     NgJsonEditorModule,
     MatTreeModule,
     MatIconModule,
     MatButtonModule,
+    MatInputModule,
+    MatFormFieldModule,
   ],
   providers: [
     HttpClient,

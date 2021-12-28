@@ -4,6 +4,7 @@
     <div class="sidebar__content ">
       <app-nodes-tree [nodes]="nodes | async"
                       (onSelectNode)="selectNode($event)"
+                      (onAddNewNode)="addNewNodeItem($event)"
                       class="nodes-tree">
       </app-nodes-tree>
     </div>

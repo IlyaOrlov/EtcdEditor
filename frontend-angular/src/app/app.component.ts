@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Component, OnDestroy } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AppService } from './app.service';
 import { ConfigNode } from './app.types';
 
@@ -8,11 +9,12 @@ import { ConfigNode } from './app.types';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
 
   title = 'frontend-angular';
   nodes: Observable<ConfigNode[]>;
   selectedNode: ConfigNode;
+  destroed: Subject<boolean> = new Subject();
 
   constructor(private appService: AppService) {
     this.nodes = new Observable();
@@ -22,12 +24,19 @@ export class AppComponent {
     this.nodes = this.appService.getNodes();
   }
 
-  selectNode(node: ConfigNode): void {
-    this.selectedNode = node;
-    console.log('selectedNode', this.selectedNode)
+  ngOnDestroy(): void {
+    this.destroed.next(true);
+    this.destroed.complete();
   }
 
-  saveNode(node: ConfigNode): void {
-    this.appService.saveNode(node);
+  selectNode(node: ConfigNode): void {
+    this.selectedNode = node;
   }
+
+  addNewNodeItem(key: string): void {
+    this.appService.saveNode(key)
+      .pipe(takeUntil(this.destroed))
+      .subscribe();
+  }
+
 }

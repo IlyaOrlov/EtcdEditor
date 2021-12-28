@@ -1,13 +1,13 @@
 <ng-container *ngIf="nodes">
   <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree">
     <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle>
-      <button mat-button (click)="selectNode(node)">
+      <button mat-stroked-button (click)="selectNode(node)">
         {{node.key}}
       </button>
     </mat-tree-node>
     <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
         <div class="mat-tree-node">
-          <button mat-button matTreeNodeToggle
+          <button mat-stroked-button matTreeNodeToggle
                   [attr.aria-label]="'Toggle ' + node.name">
             <mat-icon class="mat-icon-rtl-mirror">
               {{treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'}}
@@ -22,3 +22,25 @@
     </mat-nested-tree-node>
   </mat-tree>
 </ng-container>
+
+<div class="add-form">
+  <button *ngIf="!isFormOpened" (click)="openForm()" mat-stroked-button>
+    <mat-icon>library_add</mat-icon>
+    Add item
+  </button>
+  <form *ngIf="isFormOpened">
+    <mat-form-field appearance="outline">
+      <mat-label>Key name</mat-label>
+      <input [formControl]="nodeName" matInput placeholder="key">
+    </mat-form-field>
+    <div class="actions">
+      <button (click)="addNewNode()" class="save-button" mat-stroked-button color="primary">
+        Save
+      </button>
+      <button (click)="cancel()" mat-stroked-button color="warn">
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>
+
