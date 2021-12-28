@@ -38,6 +38,13 @@
 //   }
 // }
 
+.nodes {
+  &__item {
+    display: block;
+    margin-bottom: 10px;
+  }
+}
+
 .actions {
   display: flex;
 

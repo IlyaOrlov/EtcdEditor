@@ -48,7 +48,7 @@ function auth(req, res) {
 }
 
 // redirect requests to etcd-server
-function proxy(client_req, client_res) {
+async function proxy(client_req, client_res) {
     let opts = {
         hostname: etcdHost,
         port: etcdPort,
@@ -77,10 +77,22 @@ function proxy(client_req, client_res) {
             }
         }
     } else if (client_req.method === 'PUT') {
-        const regex = /\/.*\/keys\/(.*)\?value=(.*)/;
+        const regex = /\/.*\/keys\/(.*)/;
         const match = regex.exec(client_req.url);
         if (match) {
-            etcdApi.put(opts, match[1], match[2], client_res);
+            const buffers = [];
+            for await (const chunk of client_req) {
+                buffers.push(chunk);
+              }
+            const dataBuffer = Buffer.concat(buffers).toString();
+
+            const data = JSON.parse(dataBuffer);
+            etcdApi.put(opts, match[1], JSON.stringify(data.value), client_res);
+            // client_req.on('data', chunk => {
+            //     console.log(match[1])
+            //     console.log(chunk)
+            //     etcdApi.put(opts, match[1], chunk.data || '', client_res);
+            // })
         }
     } else if (client_req.method === 'DELETE') {
          const regex = /\/.*\/keys\/(.*)/;

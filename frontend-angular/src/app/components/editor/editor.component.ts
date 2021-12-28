@@ -26,7 +26,7 @@ export class EditorComponent implements OnChanges, OnDestroy {
 
   ngOnChanges(): void {
     if (this.node) {
-      this.data = this.node?.value;
+      this.data = JSON.parse(this.node?.value);
     }
   }
 

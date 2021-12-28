@@ -15,6 +15,6 @@ export class AppApiService {
   }
 
   saveNode(key: string, node?: ConfigNode): Observable<void> {
-    return this.http.put<void>(`${this.baseUrl}/v2/keys/${key}?value=${key}`, null);
+    return this.http.put<void>(`${this.baseUrl}/v2/keys/${key}`, {value: node || null});
   }
 }

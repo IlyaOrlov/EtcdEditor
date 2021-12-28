@@ -14,17 +14,16 @@ export class NodesTreeComponent implements OnChanges {
   @Output() onSelectNode: EventEmitter<ConfigNode> = new EventEmitter();
   @Output() onAddNewNode: EventEmitter<string> = new EventEmitter();
 
-  treeControl = new NestedTreeControl<ConfigNode>(node => node?.nodes);
-  dataSource = new MatTreeNestedDataSource<ConfigNode>();
   selectedNode: ConfigNode | null = null;
   nodeName: FormControl = new FormControl(null);
   isFormOpened = false;
+  childNodes: ConfigNode[];
 
   hasChild = (_: number, node: ConfigNode) => !!node.nodes && node.nodes.length > 0;
 
   ngOnChanges(): void {
     if (this.nodes) {
-      this.dataSource.data = this.nodes;
+      this.childNodes = this.nodes[0]?.nodes;
     }
   }
 
