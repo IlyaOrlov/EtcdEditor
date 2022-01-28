@@ -8,12 +8,11 @@ const headers = {
     'X-Raft-Term': 0
 };
 
+const etcdClient = new Etcd3();
 
-async function getAll(options, client_res) {
-    const etcdClient = new Etcd3();
+async function getAll() {
     let kvs = await etcdClient.getAll().all();
     let nodes = [];
-
     for (let idx in kvs) {
         let key =  {
             "key": '/' + idx,
@@ -23,7 +22,6 @@ async function getAll(options, client_res) {
         };
         nodes.push(key);
     }
-
     let res = {
         "action": "get",
         "node": {
@@ -32,17 +30,12 @@ async function getAll(options, client_res) {
             "nodes": nodes
         }
     };
-    console.log(JSON.stringify(res));
-
-    client_res.writeHead(200, 'Success', headers);
-    client_res.end(JSON.stringify(res));
+    return res;
 }
 
 
-async function get(options, key, client_res) {
-    const etcdClient = new Etcd3();
+async function get({ options, key }) {
     let val = await etcdClient.get(key).string();
-
     let res = {
         "action": "get",
         "node": {
@@ -52,16 +45,11 @@ async function get(options, key, client_res) {
             "createdIndex": 0
         }
     };
-    console.log(JSON.stringify(res));
-
-    client_res.writeHead(200, 'Success', headers);
-    client_res.end(JSON.stringify(res));
+    return res;
 }
 
-async function put(options, key, val, client_res) {
-    const etcdClient = new Etcd3();
+async function put({ key, val }) {
     let status = await etcdClient.put(key).value(val);
-
     let res = {
         "action": "set",
         "node": {
@@ -71,16 +59,11 @@ async function put(options, key, val, client_res) {
             "createdIndex": 0
         }
     };
-    console.log(JSON.stringify(res));
-
-    client_res.writeHead(200, 'Success', headers);
-    client_res.end(JSON.stringify(res));
+    return res;
 }
 
-async function del(options, key, client_res) {
-    const etcdClient = new Etcd3();
+async function del({ options, key, client_res }) {
     let status = await etcdClient.delete().key(key);
-
     let res = {
         "action": "delete",
         "node": {
@@ -90,10 +73,7 @@ async function del(options, key, client_res) {
             "key": "/" + key
         }
     };
-    console.log(JSON.stringify(res));
-
-    client_res.writeHead(200, 'Success', headers);
-    client_res.end(JSON.stringify(res));
+    return res;
 }
 
 module.exports = {
