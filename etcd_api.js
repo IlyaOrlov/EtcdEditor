@@ -1,3 +1,5 @@
+// TODO throw exception if status of operation unsuccesful
+
 const { Etcd3 } = require('etcd3');
 const headers = {
     "Content-Type": "application/json",
@@ -62,7 +64,7 @@ async function put({ key, val }) {
     return res;
 }
 
-async function del({ options, key, client_res }) {
+async function del({ key }) {
     let status = await etcdClient.delete().key(key);
     let res = {
         "action": "delete",

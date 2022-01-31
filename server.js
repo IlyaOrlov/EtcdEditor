@@ -79,61 +79,6 @@ async function proxy(client_req, client_res) {
         opts.ca = fs.readFileSync(caFile);
         opts.cert = fs.readFileSync(certFile);
     }
-
-    console.log(client_req.url);
-    console.log(client_req.method);
-    if (client_req.method === 'GET') {
-        const regex = /\/.*\/keys\/$/;
-        if (regex.test(client_req.url)) {
-            etcdApi.getAll(opts, client_res);
-        } else {
-            const regex = /\/.*\/keys\/(.*)/;
-            const match = regex.exec(client_req.url);
-            if (match) {
-                etcdApi.get(opts, match[1], client_res);
-            }
-        }
-    } else if (client_req.method === 'PUT') {
-        const regex = /\/.*\/keys\/(.*)/;
-        const match = regex.exec(client_req.url);
-        if (match) {
-            const buffers = [];
-            for await (const chunk of client_req) {
-                buffers.push(chunk);
-              }
-            const dataBuffer = Buffer.concat(buffers).toString();
-
-            const data = JSON.parse(dataBuffer);
-            etcdApi.put(opts, match[1], JSON.stringify(data.value), client_res);
-            // client_req.on('data', chunk => {
-            //     console.log(match[1])
-            //     console.log(chunk)
-            //     etcdApi.put(opts, match[1], chunk.data || '', client_res);
-            // })
-        }
-    } else if (client_req.method === 'DELETE') {
-         const regex = /\/.*\/keys\/(.*)/;
-         const match = regex.exec(client_req.url);
-         if (match) {
-              etcdApi.del(opts, match[1], client_res);
-         }
-    }
-    // Old etcdv2 processing
-    // client_req.pipe(requester(opts, function(res) {
-    //     // if etcd returns that the requested    page has been moved
-    //     // to a different location, indicates that the node we are
-    //     // querying is not the leader. This will redo the request
-    //     // on the leader which is reported by the Location header
-    //     if (res.statusCode === 307) {
-    //         opts.hostname = url.parse(res.headers['location']).hostname;
-    //         client_req.pipe(requester(opts, function(res) {
-    //             console.log(`Got response: ${res.statusCode}`);
-    //             res.pipe(client_res, {end: true});
-    //         }, {end: true}));
-    //     } else {
-    //         res.pipe(client_res, {end: true});
-    //     }
-    // }, {end: true}));
 }
 
 
@@ -184,20 +129,30 @@ app.get('/api\/v2/keys', async (request, response) => {
         const res = await etcdApi.getAll();
         response.status(200).send(res);
     } catch (e) {
-        response.status(500).send(`${e}`);
+        console.error(e);
+        response.status(500).send('Error while processing request');
     }
 });
 
 app.put(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
-    console.log(request.params);
     try {
-        const { 0: host } = request.params;
-        console.log(host);
-        console.log(request.body);
-        const res = await etcdApi.put({ key: host, val: JSON.stringify(request.body.value) });
+        const { 0: key } = request.params;
+        const res = await etcdApi.put({ key: key, val: JSON.stringify(request.body.value) });
         response.status(200).send(res);
     } catch (e) {
-        response.status(500).send(`${e}`);
+        console.error(e);
+        response.status(500).send('Error while processing request');
+    }
+});
+
+app.delete(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
+    try {
+        const { 0: key } = request.params;
+        const res = await etcdApi.del({ key: key });
+        response.status(200).send(res);
+    } catch (e) {
+        console.error(e);
+        response.status(500).send('Error while processing request');
     }
 });
 
