@@ -31,3 +31,10 @@ If you use a secured etcd:
  * ETCDCTL_CA_FILE
  * ETCDCTL_KEY_FILE
  * ETCDCTL_CERT_FILE
+
+ ### ETCD CERT SETUP
+ http://play.etcd.io/install
+ https://github.com/coreos/docs/blob/master/os/generate-self-signed-certificates.md
+
+# ETCD RUN 
+ ./etcd --name infra0 --data-dir infra0   --client-cert-auth --trusted-ca-file=cert_example/etcd-root-ca.pem --cert-file=cert_example/server.pem --key-file=cert_example/server-key.pem   --advertise-client-urls https://127.0.0.1:2379 --listen-client-urls https://127.0.0.1:2379
