@@ -4,6 +4,8 @@ const fs = require('fs');
 const http = require('http');
 const conf = require('./utils/config');
 const etcdApi = require('./etcd_api');
+const express = require('express');
+const bodyParser = require('body-parser');
 
 const etcdHost = conf.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
 const etcdPort = conf.get('etcdPort') || process.env.ETCD_PORT || 4001;
@@ -25,6 +27,20 @@ const MIME_TYPES = {
     "css": "text/css"
 };
 
+const app = express();
+
+let opts = {
+    hostname: etcdHost,
+    port: etcdPort,
+};
+
+// https/certs support
+if (certFile) {
+    opts.key = fs.readFileSync(keyFile);
+    opts.ca = fs.readFileSync(caFile);
+    opts.cert = fs.readFileSync(certFile);
+}
+
 
 // view-server authentication
 function auth(req, res) {
@@ -40,7 +56,7 @@ function auth(req, res) {
     auth = parts[1];
 
     // credentials
-    auth = new Buffer(auth, 'base64').toString();
+    auth = Buffer(auth, 'base64').toString();
     auth = auth.match(/^([^:]*):(.*)$/);
     if (!auth) return false;
 
@@ -62,61 +78,6 @@ async function proxy(client_req, client_res) {
         opts.ca = fs.readFileSync(caFile);
         opts.cert = fs.readFileSync(certFile);
     }
-
-    console.log(client_req.url);
-    console.log(client_req.method);
-    if (client_req.method === 'GET') {
-        const regex = /\/.*\/keys\/$/;
-        if (regex.test(client_req.url)) {
-            etcdApi.getAll(opts, client_res);
-        } else {
-            const regex = /\/.*\/keys\/(.*)/;
-            const match = regex.exec(client_req.url);
-            if (match) {
-                etcdApi.get(opts, match[1], client_res);
-            }
-        }
-    } else if (client_req.method === 'PUT') {
-        const regex = /\/.*\/keys\/(.*)/;
-        const match = regex.exec(client_req.url);
-        if (match) {
-            const buffers = [];
-            for await (const chunk of client_req) {
-                buffers.push(chunk);
-              }
-            const dataBuffer = Buffer.concat(buffers).toString();
-
-            const data = JSON.parse(dataBuffer);
-            etcdApi.put(opts, match[1], JSON.stringify(data.value), client_res);
-            // client_req.on('data', chunk => {
-            //     console.log(match[1])
-            //     console.log(chunk)
-            //     etcdApi.put(opts, match[1], chunk.data || '', client_res);
-            // })
-        }
-    } else if (client_req.method === 'DELETE') {
-         const regex = /\/.*\/keys\/(.*)/;
-         const match = regex.exec(client_req.url);
-         if (match) {
-              etcdApi.del(opts, match[1], client_res);
-         }
-    }
-    // Old etcdv2 processing
-    // client_req.pipe(requester(opts, function(res) {
-    //     // if etcd returns that the requested    page has been moved
-    //     // to a different location, indicates that the node we are
-    //     // querying is not the leader. This will redo the request
-    //     // on the leader which is reported by the Location header
-    //     if (res.statusCode === 307) {
-    //         opts.hostname = url.parse(res.headers['location']).hostname;
-    //         client_req.pipe(requester(opts, function(res) {
-    //             console.log(`Got response: ${res.statusCode}`);
-    //             res.pipe(client_res, {end: true});
-    //         }, {end: true}));
-    //     } else {
-    //         res.pipe(client_res, {end: true});
-    //     }
-    // }, {end: true}));
 }
 
 
@@ -141,36 +102,61 @@ if (certFile) {
     }
 }
 
-
-// view-server
-http.createServer(function serverFile(req, res) {
-    // authentication
-    if (!auth(req, res)) {
-        res.statusCode = 401;
-        res.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
-        res.end('Unauthorized');
+app.use((request, response, next) => {
+    if (!auth(request, response)) {
+        response.statusCode = 401;
+        response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
+        response.end('Unauthorized');
         return;
     }
+    next();
+});
 
-    if (req.url === '/') {
-        req.url = '/index.html';
-    } else if (req.url.substr(0, 3) === '/v2') {
-        // avoid fileExists for /v2 routes
-        return proxy(req, res);
+app.use(express.static(publicDir, {
+    extensions: Object.keys(MIME_TYPES),
+}));
+
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+
+app.get('/', async (request, response) => {
+
+});
+
+app.get('/api\/v2/keys', async (request, response) => {
+    try {
+        const res = await etcdApi.getAll();
+        response.status(200).send(res);
+    } catch (e) {
+        console.error(e);
+        response.status(500).send('Error while processing request');
     }
+});
 
-    const uri = url.parse(req.url).pathname;
-    const filename = path.join(process.cwd(), publicDir, uri);
+app.put(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
+    try {
+        const { 0: key } = request.params;
+        const res = await etcdApi.put({ key: key, val: JSON.stringify(request.body.value) });
+        response.status(200).send(res);
+    } catch (e) {
+        console.error(e);
+        response.status(500).send('Error while processing request');
+    }
+});
 
-    fs.exists(filename, function (exists) {
-        // proxy if file does not exist
-        if (!exists) return proxy(req, res);
+app.delete(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
+    try {
+        const { 0: key } = request.params;
+        const res = await etcdApi.del({ key: key });
+        response.status(200).send(res);
+    } catch (e) {
+        console.error(e);
+        response.status(500).send('Error while processing request');
+    }
+});
 
-        // serve static file if exists
-        res.writeHead(200, MIME_TYPES[path.extname(filename).split(".")[1]]);
-        fs.createReadStream(filename).pipe(res);
-    });
-}).listen(serverPort, function () {
+app.listen(serverPort, () => {
     console.log(`proxy /api requests to etcd on ${etcdHost}:${etcdPort}`);
     console.log(`etc_viewer listening on port ${serverPort}`);
 });
+
