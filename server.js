@@ -5,7 +5,6 @@ const http = require('http');
 const conf = require('./utils/config');
 const etcdApi = require('./etcd_api');
 const express = require('express');
-const bodyParsed = require('body-parser');
 const bodyParser = require('body-parser');
 
 const etcdHost = conf.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
