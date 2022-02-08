@@ -11,13 +11,14 @@ const headers = {
     'X-Raft-Term': 0
 };
 
-const etcdClient = new Etcd3({
-    credentials: {
-        rootCertificate: fs.readFileSync(__dirname + 'cert_example/etcd-root-ca.pem'),
-        certChain: fs.readFileSync(__dirname + 'cert_example/client.pem'), 
-        privateKey: fs.readFileSync(__dirname + 'cert_example/client-key.pem')
-    },
-});
+const etcdClient = new Etcd3();
+// const etcdClient = new Etcd3({
+//     credentials: {
+//         rootCertificate: fs.readFileSync(__dirname + 'cert_example/etcd-root-ca.pem'),
+//         certChain: fs.readFileSync(__dirname + 'cert_example/client.pem'), 
+//         privateKey: fs.readFileSync(__dirname + 'cert_example/client-key.pem')
+//     },
+// });
 
 async function getAll() {
     let kvs = await etcdClient.getAll().all();
