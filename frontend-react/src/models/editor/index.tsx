@@ -5,8 +5,8 @@ import { ConfigNode } from '../../types';
 import { JsonEditor } from 'jsoneditor-react'
 
 type EditorProps = {
-  selected: any,
-  nodes: ConfigNode[],
+  index: number,
+  node: ConfigNode,
   updateData: any,
 }
 
@@ -14,18 +14,18 @@ const editorOptions = {
   modes: ['code', 'text', 'tree', 'view']
 }
 
-export const Editor: FC<EditorProps> = ({ selected, nodes, updateData }) => {
+export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
 
-  const [data, setData] = React.useState<any>({})
+  const [data, setData] = React.useState<Object | string>({})
   const [canSave, setCanSave] = React.useState<boolean>(false)
   const jsonEditorRef = React.useRef<any>(null)
 
   React.useEffect(() => {
-    setData(nodes?.[selected]?.value || {});
-  }, [nodes])
+    setData(node?.value || {});
+  }, [node])
   React.useEffect(() => {
-    jsonEditorRef?.current?.set(nodes?.[selected]?.value || {});
-  }, [selected])
+    jsonEditorRef?.current?.set(node?.value || {});
+  }, [index])
 
   const setRef = (instance: any) => {
     if (instance) {
@@ -34,18 +34,16 @@ export const Editor: FC<EditorProps> = ({ selected, nodes, updateData }) => {
       jsonEditorRef.current = null;
     }
   };
-  console.log(data)
   const saveConfig = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
-    updateData(data)
+    updateData(index, data)
   }
   const cancel = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
     if (jsonEditorRef.current !== null) {
-      jsonEditorRef?.current?.set(nodes?.[selected]?.value || {});
+      jsonEditorRef?.current?.set(node?.value || {});
     }
   }
-
   const handleChange = (data: any) => {
     if (!canSave) {
       setCanSave(true)

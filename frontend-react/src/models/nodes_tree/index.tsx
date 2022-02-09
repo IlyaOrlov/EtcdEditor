@@ -11,8 +11,8 @@ type NodesTreeProps = {
 
 export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes, updateNodes }) => {
 
-  const [isFormOpened, setIsFormOpened] = React.useState(false);
-  const [nodeName, setNodeName] = React.useState('');
+  const [isFormOpened, setIsFormOpened] = React.useState<boolean>(false);
+  const [nodeName, setNodeName] = React.useState<string>('');
 
   const openForm = () => {
     setIsFormOpened(true)
@@ -56,7 +56,7 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
                 <NodesItem
                   className="button"
                   key={node.key}
-                  active={selected === i}
+                  active={selected.has(i)}
                   onClick={() => selectNode(i)}
                 >
                   {node.key}

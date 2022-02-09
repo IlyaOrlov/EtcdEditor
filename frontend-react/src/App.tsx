@@ -7,18 +7,19 @@ import { NodesTree } from '../src/models/nodes_tree'
 import { Editor } from '../src/models/editor'
 import { ConfigNode } from './types';
 import { getNodes, saveNode } from './services/API';
+import { EditorsList } from './models/editors_list';
 
 export function App() {
   const [nodes, setNodes] = React.useState<ConfigNode[]>([]);
-  const [selectedNode, setSelectedNode] = React.useState(0);
+  const [selectedNodes, setSelectedNodes] = React.useState<Set<number>>(new Set());
 
   React.useEffect(() => {
     fetchNodes()
   }, [])
 
   async function fetchNodes() {
-    const {response} = await getNodes()
-    const result = response.node.nodes.map((node: ConfigNode) => ({...node, value: JSON.parse(node.value)}));
+    const { response } = await getNodes()
+    const result = response.node.nodes.map((node: ConfigNode) => ({ ...node, value: JSON.parse(node.value) }));
     setNodes(result)
   }
 
@@ -27,13 +28,21 @@ export function App() {
   }
 
   const updateSelected = (index: number) => {
-    setSelectedNode(index)
+    const newSelectedNodes = new Set(selectedNodes)
+    if(newSelectedNodes.has(index)) {
+      newSelectedNodes.delete(index)
+    } else {
+      if(newSelectedNodes.size < 4) {
+        newSelectedNodes.add(index)
+      }
+    }
+    setSelectedNodes(newSelectedNodes)
   }
 
-  const updateData = async (value: any) => {
+  const updateData = async (index: number, value: any) => {
     const newNodes = [...nodes];
-    newNodes[selectedNode].value = value;
-    const res = await saveNode(newNodes[selectedNode].key, newNodes[selectedNode])
+    newNodes[index].value = value;
+    const res = await saveNode(newNodes[index].key, newNodes[index])
     setNodes(newNodes)
   }
 
@@ -43,7 +52,7 @@ export function App() {
         <SidebarHeader>Config Editor</SidebarHeader>
         <SidebarContent>
           <NodesTree
-            selected={selectedNode}
+            selected={selectedNodes}
             updateSelected={updateSelected}
             nodes={nodes}
             updateNodes={updateNodes}
@@ -51,15 +60,11 @@ export function App() {
         </SidebarContent>
       </Sidebar>
       <Main>
-        {
-          nodes?.length > 0 && (
-            <Editor
-              selected={selectedNode}
-              nodes={nodes}
-              updateData={updateData}
-            />
-          )
-        }
+        <EditorsList
+          selected={selectedNodes}
+          nodes={nodes}
+          updateData={updateData}
+        />
       </Main>
     </Container >
   );
