@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { ConfigNode } from '../../types';
-import styled from 'styled-components'
+import styled from 'styled-components';
 
 type NodesTreeProps = {
   selected: any,
@@ -20,14 +20,13 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
 
   const addNewNode = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
-    console.log('Add New Node', nodeName);
     updateNodes([
       ...nodes,
       {
         createdIndex: nodes.length,
         key: nodeName,
         modifiedIndex: nodes.length,
-        value: "",
+        value: {},
       }
     ])
     setNodeName('')
@@ -43,8 +42,8 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
     setNodeName(e.target.value)
   }
 
-  const selectNode = (node: ConfigNode) => {
-    updateSelected(node.createdIndex)
+  const selectNode = (index: number)=> {
+    updateSelected(index)
   }
 
   return (
@@ -53,12 +52,12 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
         nodes?.length > 0 && (
           <Nodes>
             {
-              nodes?.map(node => (
+              nodes?.map((node, i) => (
                 <NodesItem
                   className="button"
                   key={node.key}
-                  active={selected === node.createdIndex}
-                  onClick={() => selectNode(node)}
+                  active={selected === i}
+                  onClick={() => selectNode(i)}
                 >
                   {node.key}
                 </NodesItem>

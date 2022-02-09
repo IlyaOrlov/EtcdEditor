@@ -16,15 +16,15 @@ const editorOptions = {
 
 export const Editor: FC<EditorProps> = ({ selected, nodes, updateData }) => {
 
-  const [data, setData] = React.useState<string>('')
+  const [data, setData] = React.useState<any>({})
   const [canSave, setCanSave] = React.useState<boolean>(false)
   const jsonEditorRef = React.useRef<any>(null)
 
   React.useEffect(() => {
-    setData(JSON.parse(nodes?.[selected]?.value || '{}'));
+    setData(nodes?.[selected]?.value || {});
   }, [nodes])
   React.useEffect(() => {
-    jsonEditorRef?.current?.set(JSON.parse(nodes?.[selected]?.value || '{}'));
+    jsonEditorRef?.current?.set(nodes?.[selected]?.value || {});
   }, [selected])
 
   const setRef = (instance: any) => {
@@ -34,15 +34,15 @@ export const Editor: FC<EditorProps> = ({ selected, nodes, updateData }) => {
       jsonEditorRef.current = null;
     }
   };
-
+  console.log(data)
   const saveConfig = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
-    updateData(JSON.stringify(data))
+    updateData(data)
   }
   const cancel = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
     if (jsonEditorRef.current !== null) {
-      jsonEditorRef?.current?.set(JSON.parse(nodes?.[selected]?.value));
+      jsonEditorRef?.current?.set(nodes?.[selected]?.value || {});
     }
   }
 

@@ -6,35 +6,21 @@ import './models/init'
 import { NodesTree } from '../src/models/nodes_tree'
 import { Editor } from '../src/models/editor'
 import { ConfigNode } from './types';
-
-const mock: ConfigNode[] = [
-  {
-    createdIndex: 0,
-    key: "/test",
-    modifiedIndex: 0,
-    value: "{\"test_1\":1111,\"test_obj\":{\"key_1\":[\"apples\",\"bananas\",\"grapes\"]}}",
-  },
-  {
-    createdIndex: 1,
-    key: "/test_2",
-    modifiedIndex: 1,
-    value: "{\"test_2\":2222,\"test_array\":[\"apples\",\"bananas\",\"grapes\"]}",
-  },
-  {
-    createdIndex: 2,
-    key: "/test_3",
-    modifiedIndex: 2,
-    value: "{\"test_3\":3333}",
-  },
-]
+import { getNodes, saveNode } from './services/API';
 
 export function App() {
   const [nodes, setNodes] = React.useState<ConfigNode[]>([]);
   const [selectedNode, setSelectedNode] = React.useState(0);
 
   React.useEffect(() => {
-    setNodes(mock)
+    fetchNodes()
   }, [])
+
+  async function fetchNodes() {
+    const {response} = await getNodes()
+    const result = response.node.nodes.map((node: ConfigNode) => ({...node, value: JSON.parse(node.value)}));
+    setNodes(result)
+  }
 
   const updateNodes = (newNodes: ConfigNode[]) => {
     setNodes(newNodes)
@@ -44,9 +30,10 @@ export function App() {
     setSelectedNode(index)
   }
 
-  const updateData = (value: string) => {
+  const updateData = async (value: any) => {
     const newNodes = [...nodes];
     newNodes[selectedNode].value = value;
+    const res = await saveNode(newNodes[selectedNode].key, newNodes[selectedNode])
     setNodes(newNodes)
   }
 
