@@ -1,8 +1,9 @@
 import React, { FC } from 'react';
 import styled from 'styled-components'
 import { ConfigNode } from '../../types';
+
 // @ts-ignore
-import { JsonEditor } from 'jsoneditor-react'
+import JSONEditor from 'jsoneditor';
 
 type EditorProps = {
   index: number,
@@ -10,45 +11,63 @@ type EditorProps = {
   updateData: any,
 }
 
-const editorOptions = {
-  modes: ['code', 'text', 'tree', 'view']
-}
-
 export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
+  const modes = ['code', 'text', 'tree', 'view'];
 
+  const [mode, setMode] = React.useState<Object | string>("tree")
   const [data, setData] = React.useState<Object | string>({})
   const [canSave, setCanSave] = React.useState<boolean>(false)
-  const jsonEditorRef = React.useRef<any>(null)
+  const elRef = React.useRef<HTMLDivElement | null>(null);
+  const editorRef = React.useRef<JSONEditor | null>(null);
+
+  const unmountEditor = () => {
+    editorRef.current?.destroy();
+  }
 
   React.useEffect(() => {
-    setData(node?.value || {});
-  }, [node])
-  React.useEffect(() => {
-    jsonEditorRef?.current?.set(node?.value || {});
-  }, [index])
+    const container = elRef.current;
+    const options = {
+      mode: mode,
+      modes: modes,
+      onModeChange: handleModeChange,
+      onChange: handleChange,
+    };
 
-  const setRef = (instance: any) => {
-    if (instance) {
-      jsonEditorRef.current = instance.jsonEditor;
-    } else {
-      jsonEditorRef.current = null;
+    if (container) {
+      const jsonEditor = new JSONEditor(container, options);
+      jsonEditor.set(node.value);
+      editorRef.current = jsonEditor;
     }
-  };
+
+    return unmountEditor;
+  }, [node]);
+
   const saveConfig = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
     updateData(index, data)
   }
   const cancel = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
-    if (jsonEditorRef.current !== null) {
-      jsonEditorRef?.current?.set(node?.value || {});
+    if (editorRef.current !== null) {
+      editorRef?.current?.set(node?.value || {});
     }
   }
-  const handleChange = (data: any) => {
+  const handleModeChange = (prevMode: string, nextMode: string) => {
+    console.log('prev', prevMode)
+    console.log('next', nextMode)
+    setMode(nextMode)
+  }
+  const handleChange = () => {
+    console.log('mode', mode)
+    const data = editorRef.current.get()
     if (!canSave) {
       setCanSave(true)
     }
-    setData(data)
+    if (!data) {
+      setData('null')
+    } else {
+      setData(data)
+    }
   }
 
   return (
@@ -57,11 +76,10 @@ export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
     >
       {
         data && (
-          <JsonEditor
-            ref={setRef}
-            onChange={handleChange}
-            value={data}
-            schema={editorOptions}
+          <div
+            id={`jsoneditor_${index}`}
+            ref={elRef}
+            className="jsoneditor-react-container"
           />
         )
       }
@@ -80,7 +98,7 @@ export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
         </button>
       </ActionContainer>
     </Form>
-  );
+  )
 };
 
 const Form = styled.form`

@@ -11,6 +11,29 @@ type EditorListProps = {
 
 export const EditorsList: FC<EditorListProps> = ({ selected, nodes, updateData }) => {
   const arr = [...selected]
+
+  React.useEffect(() => {
+
+    function watchscroll() {
+
+    }
+    // setTimeout(() => {
+
+    // }, 3000)
+    // const editorTrees = document.getElementsByClassName('jsoneditor-tree');
+
+    // console.log(editorTrees)
+
+    // .addEventListener('scroll', function(e: any) {
+    //   console.log(e?.target?.scrollTop);
+    //   const top = e?.target?.scrollTop;
+    // })
+
+    return () => {
+
+    }
+  }, [])
+
   return (
     <List
       length={arr.length}
@@ -38,7 +61,5 @@ const List = styled.div<Props>`
   height: 100%;
   display: ${(props) => props.length > 1 ? 'grid' : 'block'};
   grid-template-columns: 1fr 1fr;
-  & > form {
-    width: 100%;
-  }
+  grid-template-rows: ${(props) => props.length > 2 ? 'minmax(50vh, 50vh)' : '1fr'} ;
 `

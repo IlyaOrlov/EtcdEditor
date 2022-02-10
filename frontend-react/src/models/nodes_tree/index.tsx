@@ -42,7 +42,7 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
     setNodeName(e.target.value)
   }
 
-  const selectNode = (index: number)=> {
+  const selectNode = (index: number) => {
     updateSelected(index)
   }
 
@@ -70,8 +70,9 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
       <AddForm>
         {
           !isFormOpened && (
-            <button className="button" onClick={openForm}>
-              Add item
+            <button className="button button-plus" onClick={openForm}>
+              <span className="button-icon" />
+              <span className="button-text">Add item</span>
             </button>
           )
         }
@@ -93,12 +94,12 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
               <AddFormActions>
                 <button
                   onClick={addNewNode}
-                  className={`button save-button --primary ${nodeName.length < 2 ? "disabled" : "" }`}
+                  className={`button save-button --primary ${nodeName.length < 2 ? "disabled" : ""}`}
                 >
-                  Save
+                  <span className="button-text">Save</span>
                 </button>
                 <button onClick={cancel} className="button cancel-button --warn">
-                  Cancel
+                  <span className="button-text">Cancel</span>
                 </button>
               </AddFormActions >
             </form >
@@ -117,11 +118,12 @@ interface Props {
 }
 
 const Nodes = styled.div`
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
 `
 const NodesItem = styled.button<Props>`
+  width: 100%;
   margin-bottom: 10px;
   background-color: ${props => props.active ? "#3883FA" : "#fff"};
   color: ${props => props.active ? "#fff" : "#000"};
