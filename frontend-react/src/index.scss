@@ -13,6 +13,7 @@ body,
 }
 
 body {
+	position: relative;
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -22,6 +23,21 @@ body {
   line-height: 140%;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+	&::-webkit-scrollbar {
+		width: 6px;
+	}
+	
+	&::-webkit-scrollbar-track {
+		box-shadow: inset 0 0 6px transparent;
+		border-radius: 5px;
+		background-color: lghtgrey;
+	}
+	
+	&::-webkit-scrollbar-thumb {
+		transition: 0.3s;
+		border-radius: 5px;
+		background-color: #3883fa;
+	}
 }
 
 code {
@@ -49,6 +65,26 @@ textarea {
 	textarea {
 		box-shadow: none;
 	}
+}
+
+h1,
+.h1,
+h2,
+.h2,
+h3,
+.h3,
+h4,
+.h4,
+h5,
+.h5,
+h6,
+.h6,
+.h7,
+.h8 {
+	font-style: inherit;
+	margin: 0;
+	padding: 0;
+	font-weight: 600;
 }
 
 button {
@@ -174,3 +210,146 @@ button {
 	line-height: 12px;
 	text-transform: uppercase;
 }
+
+/* Start Modal */
+.pp_,
+[data-pp] {
+	cursor: pointer;
+}
+
+.pp {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1000;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	opacity: 0;
+	visibility: hidden;
+	overflow-y: auto;
+	scroll-behavior: smooth;
+	scroll-snap-type: y mandatory;
+	transition: 0.3s;
+}
+
+.pp__bg {
+	position: fixed;
+	width: 100%;
+	height: 100%;
+	background: rgba(56, 54, 54, 0.8);
+	z-index: 0;
+	top: 0;
+	left: 0;
+	cursor: pointer;
+}
+
+.pp__content {
+	width: 480px;
+	position: absolute;
+	z-index: 1;
+	margin-left: auto;
+	margin-right: auto;
+	background-color: #fff;
+	opacity: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	transition: 0.3s;
+	cursor: auto;
+	border-radius: 20px;
+	overflow: hidden;
+	&-head {
+		padding: 25px 60px 25px 24px;
+		background-color: lightgrey;
+		&-title {
+			h4 {
+				line-height: 1;
+			}
+		}
+	}
+	&-body {
+		padding: 50px 45px;
+	}
+
+	&-btns {
+		display: flex;
+		justify-content: center;
+		& > * + * {
+			margin-left: 15px;
+		}
+	}
+}
+
+.pp::-webkit-scrollbar {
+	width: 6px;
+}
+
+.pp::-webkit-scrollbar-track {
+	box-shadow: inset 0 0 6px transparent;
+	border-radius: 5px;
+	background-color: lghtgrey;
+}
+
+.pp::-webkit-scrollbar-thumb {
+	transition: 0.3s;
+	border-radius: 5px;
+	background-color: #000;
+}
+
+.pp__close {
+	width: 40px;
+	height: 40px;
+	top: 18px;
+	right: 24px;
+	position: absolute;
+	display: -webkit-box;
+	display: -ms-flexbox;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	align-self: flex-end;
+	will-change: transform;
+	cursor: pointer;
+	transition: 0.3s;
+	z-index: 10;
+	&:hover {
+		transform: scale(1.1);
+	}
+	.close__lane {
+		height: 2px;
+		background-color: #000;
+		width: 28px;
+		will-change: transform;
+		transform: rotate(45deg);
+		transition: 0.3s;
+		position: absolute;
+		&:last-child {
+			will-change: transform;
+			transform: rotate(-45deg);
+		}
+	}
+}
+
+.show {
+	opacity: 1;
+	visibility: visible;
+	z-index: 100;
+}
+
+.show .pp__content {
+	transition-delay: 0.3s;
+	opacity: 1;
+}
+
+.noscroll {
+	overflow: hidden !important;
+}
+
+/* End Modal */

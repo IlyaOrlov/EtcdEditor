@@ -35,7 +35,7 @@ export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
 
     if (container) {
       const jsonEditor = new JSONEditor(container, options);
-      jsonEditor.set(node.value);
+      jsonEditor.set(node?.value);
       editorRef.current = jsonEditor;
     }
 
@@ -53,12 +53,9 @@ export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
     }
   }
   const handleModeChange = (prevMode: string, nextMode: string) => {
-    console.log('prev', prevMode)
-    console.log('next', nextMode)
     setMode(nextMode)
   }
   const handleChange = () => {
-    console.log('mode', mode)
     const data = editorRef.current.get()
     if (!canSave) {
       setCanSave(true)
@@ -76,11 +73,16 @@ export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
     >
       {
         data && (
-          <div
-            id={`jsoneditor_${index}`}
-            ref={elRef}
-            className="jsoneditor-react-container"
-          />
+          <>
+            <EditorTitle>
+              {node?.key}
+            </EditorTitle>
+            <EditorContainer
+              id={`jsoneditor_${index}`}
+              ref={elRef}
+              className="jsoneditor-react-container"
+            />
+          </>
         )
       }
       <ActionContainer className="action-container">
@@ -102,13 +104,45 @@ export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
 };
 
 const Form = styled.form`
-  height: 100%;
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   position: relative;
+  background-color: #fff;
   & > div:first-child {
     height: 100%;
     z-index: 1;
+  }
+`
+const EditorTitle = styled.h3`
+  height: 43px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  color: #ffffffbf;
+  background-color: #3883fa;
+`
+const EditorContainer = styled.div`
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  & > .jsoneditor {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding-bottom: 126px;
+  }
+  & > .jsoneditor > .jsoneditor-outer {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    textarea,
+    .ace-jsoneditor {
+      flex-grow: 1;
+    }
   }
 `
 const ActionContainer = styled.div`

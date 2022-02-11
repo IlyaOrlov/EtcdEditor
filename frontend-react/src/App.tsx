@@ -4,36 +4,39 @@ import styled from 'styled-components';
 import './models/init'
 
 import { NodesTree } from '../src/models/nodes_tree'
-import { Editor } from '../src/models/editor'
 import { ConfigNode } from './types';
-import { getNodes, saveNode } from './services/API';
+import { deleteNode, getNodes, saveNode } from './services/API';
 import { EditorsList } from './models/editors_list';
 
 export function App() {
   const [nodes, setNodes] = React.useState<ConfigNode[]>([]);
-  const [selectedNodes, setSelectedNodes] = React.useState<Set<number>>(new Set());
+  const [selectedNodes, setSelectedNodes] = React.useState<Set<string>>(new Set());
 
   React.useEffect(() => {
     fetchNodes()
   }, [])
 
   async function fetchNodes() {
-    const { response } = await getNodes()
-    const result = response.node.nodes.map((node: ConfigNode) => ({ ...node, value: JSON.parse(node.value) }));
-    setNodes(result)
+    try {
+      const { response } = await getNodes()
+      const result = response.node.nodes.map((node: ConfigNode) => ({ ...node, value: JSON.parse(node.value) }));
+      setNodes(result)
+    } catch (error: any) {
+      console.log(error?.message)
+    }
   }
 
   const updateNodes = (newNodes: ConfigNode[]) => {
     setNodes(newNodes)
   }
 
-  const updateSelected = (index: number) => {
+  const updateSelected = (key: string) => {
     const newSelectedNodes = new Set(selectedNodes)
-    if(newSelectedNodes.has(index)) {
-      newSelectedNodes.delete(index)
+    if (newSelectedNodes.has(key)) {
+      newSelectedNodes.delete(key)
     } else {
-      if(newSelectedNodes.size < 4) {
-        newSelectedNodes.add(index)
+      if (newSelectedNodes.size < 4) {
+        newSelectedNodes.add(key)
       }
     }
     setSelectedNodes(newSelectedNodes)
@@ -42,8 +45,30 @@ export function App() {
   const updateData = async (index: number, value: any) => {
     const newNodes = [...nodes];
     newNodes[index].value = value;
-    const res = await saveNode(newNodes[index].key, newNodes[index])
-    setNodes(newNodes)
+    try {
+      const res = await saveNode(newNodes[index].key, newNodes[index])
+      setNodes(newNodes)
+    } catch (error: any) {
+      console.log(error?.messagge)
+    }
+  }
+
+  const resetHandle = () => {
+    setSelectedNodes(new Set())
+  }
+  const removeHandle = async (key: string) => {
+    try {
+      const res = await deleteNode(key);
+      const newNodes = nodes.filter(node => node.key !== key)
+      setNodes(newNodes)
+      if(selectedNodes.has(key)) {
+        const newSelected = new Set([...selectedNodes]);
+        newSelected.delete(key);
+        setSelectedNodes(newSelected)
+      }
+    } catch (error:any) {
+      console.log(error.message)
+    }
   }
 
   return (
@@ -56,6 +81,8 @@ export function App() {
             updateSelected={updateSelected}
             nodes={nodes}
             updateNodes={updateNodes}
+            reset={resetHandle}
+            remove={removeHandle}
           />
         </SidebarContent>
       </Sidebar>
@@ -83,13 +110,12 @@ const Sidebar = styled.div`
   border: 1px solid #3883fa;
   border-right-width: 0px;
 `
-const SidebarHeader = styled.div`
-  padding: 0 10px;
-  height: 35px;
+const SidebarHeader = styled.h3`
+  padding: 10px;
+  height: 78px;
   display: flex;
   align-items: center;
   background-color: #3883fa;
-  font-size: 14px;
   color: #ffffffbf;
 `
 const SidebarContent = styled.div`

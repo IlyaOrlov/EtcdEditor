@@ -1,16 +1,22 @@
 import React, { FC } from 'react';
 import { ConfigNode } from '../../types';
 import styled from 'styled-components';
+import { Modal } from '../modal';
 
 type NodesTreeProps = {
   selected: any,
   updateSelected: any,
   nodes: ConfigNode[],
-  updateNodes: any
+  updateNodes: any,
+  reset: any,
+  remove: any,
 }
 
-export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes, updateNodes }) => {
+export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes, updateNodes, reset, remove }) => {
 
+  const [modal, setModal] = React.useState(false)
+  const [deletebleIndex, setDeletebleIndex] = React.useState<number>(0)
+  const [deletebleKey, setDeletebleKey] = React.useState<string>('')
   const [isFormOpened, setIsFormOpened] = React.useState<boolean>(false);
   const [nodeName, setNodeName] = React.useState<string>('');
 
@@ -42,30 +48,59 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
     setNodeName(e.target.value)
   }
 
-  const selectNode = (index: number) => {
-    updateSelected(index)
+  const selectNode = (key: string) => {
+    updateSelected(key)
+  }
+
+  const removeHandle = (key: string, index:number) => {
+    setDeletebleKey(key)
+    setDeletebleIndex(index)
+    setModal(true)
+  }
+
+  const deleteNodeHandle = () => {
+    remove(deletebleKey, deletebleIndex)
+    setModal(false)
   }
 
   return (
     <>
-      {
-        nodes?.length > 0 && (
-          <Nodes>
-            {
-              nodes?.map((node, i) => (
-                <NodesItem
-                  className="button"
-                  key={node.key}
-                  active={selected.has(i)}
-                  onClick={() => selectNode(i)}
-                >
-                  {node.key}
-                </NodesItem>
-              ))
-            }
-          </Nodes>
-        )
-      }
+      <NodesWrapper>
+        {
+          selected.size > 1 && (
+            <ResetBtn
+              className="button"
+              onClick={reset}
+            >
+              Reset Filters
+            </ResetBtn>
+          )
+        }
+        {
+          nodes?.length > 0 && (
+            <Nodes>
+              {
+                nodes?.map((node, i) => (
+                  <NodesItemWrap
+                    key={node.key}
+                  >
+                    <NodesItem
+                      className="button"
+                      active={selected.has(node.key)}
+                      onClick={() => selectNode(node.key)}
+                    >
+                      {node.key}
+                    </NodesItem>
+                    <NodesItemBtn
+                      onClick={() => removeHandle(node.key, i)}
+                    />
+                  </NodesItemWrap>
+                ))
+              }
+            </Nodes>
+          )
+        }
+      </NodesWrapper>
 
       <AddForm>
         {
@@ -106,29 +141,111 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
           )
         }
       </AddForm >
+      <Modal
+        isShown={modal}
+        keyName={deletebleKey}
+        titleText="Удаление хоста"
+        hideModal={() => setModal(false)}
+      >
+        <ModalText>
+          Are you sure to delete {deletebleKey}
+        </ModalText>
 
+        <div className="pp__content-btns">
+          <button
+            onClick={deleteNodeHandle}
+            type="button"
+            className="button --warn"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => setModal(false)}
+            type="button"
+            className="button --primary"
+          >
+            Cancel
+          </button>
+        </div>
+      </Modal>
     </>
   );
 };
 
 interface Props {
-  key: string,
   active: boolean,
   onClick: any
 }
 
+const NodesWrapper = styled.div`
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+`
 const Nodes = styled.div`
   display: inline-flex;
   flex-direction: column;
   align-items: flex-start;
 `
+const ResetBtn = styled.button`
+  padding: 5px 10px;
+  min-width: initial;
+  position: absolute;
+  right: 0;
+  top: 0;
+  color: grey;
+  border: none;
+  background: none;
+  &.button:hover {
+    background: none;
+    color: #4c4b4b;
+  }
+`
+const NodesItemWrap = styled.div`
+  position: relative;
+  width: 100%;
+  padding-right: 25px;
+  margin-bottom: 10px;
+`
 const NodesItem = styled.button<Props>`
   width: 100%;
-  margin-bottom: 10px;
   background-color: ${props => props.active ? "#3883FA" : "#fff"};
   color: ${props => props.active ? "#fff" : "#000"};
   &:hover {
     background-color: ${props => props.active ? "#0f66f1" : "rgba(#000, 0.15)"};
+  }
+`
+const NodesItemBtn = styled.span`
+  width: 18px;
+  height: 18px;
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  transition: .3s;
+  cursor:  pointer;
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%) rotate(-45deg);
+    width: 100%;
+    height: 2px;
+    background-color: lightgrey;
+    transition: .3s;
+  }
+  &::after {
+    transform: translate(-50%,-50%) rotate(45deg);
+  }
+  &:hover {
+    transform: translateY(-50%) scale(1.2);
+  }
+  &:hover::before,
+  &:hover::after {
+    background-color: #9b9797;
   }
 `
 const AddForm = styled.div`
@@ -141,4 +258,8 @@ const AddFormActions = styled.div`
   .button + button {
     margin-left: 10px;
   }
+`
+const ModalText = styled.div`
+  margin-bottom: 35px;
+  text-align: center;
 `

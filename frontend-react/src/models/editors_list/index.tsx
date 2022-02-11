@@ -4,13 +4,13 @@ import { ConfigNode } from '../../types';
 import { Editor } from '../editor';
 
 type EditorListProps = {
-  selected: Set<number>,
+  selected: Set<string>,
   nodes: ConfigNode[],
   updateData: any,
 }
 
 export const EditorsList: FC<EditorListProps> = ({ selected, nodes, updateData }) => {
-  const arr = [...selected]
+  const arr = nodes.filter(node => selected.has(node.key))
 
   React.useEffect(() => {
 
@@ -39,11 +39,11 @@ export const EditorsList: FC<EditorListProps> = ({ selected, nodes, updateData }
       length={arr.length}
     >
       {
-        arr.length > 0 && arr?.map(index => (
+        arr.length > 0 && arr?.map((node, index) => (
           <Editor
-            key={nodes[index].key}
-            index={index}
-            node={nodes[index]}
+            key={node?.key}
+            index={nodes.findIndex(item => item.key === node?.key)}
+            node={node}
             updateData={updateData}
           />
         ))
@@ -59,7 +59,7 @@ interface Props {
 
 const List = styled.div<Props>`
   height: 100%;
-  display: ${(props) => props.length > 1 ? 'grid' : 'block'};
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: ${(props) => props.length > 2 ? 'minmax(50vh, 50vh)' : '1fr'} ;
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: nowrap;
 `
