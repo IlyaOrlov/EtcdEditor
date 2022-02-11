@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 import { ConfigNode } from '../../types';
 import styled from 'styled-components';
 import { Modal } from '../modal';
+import { motion } from 'framer-motion'
 
 type NodesTreeProps = {
   selected: any,
@@ -52,7 +53,7 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
     updateSelected(key)
   }
 
-  const removeHandle = (key: string, index:number) => {
+  const removeHandle = (key: string, index: number) => {
     setDeletebleKey(key)
     setDeletebleIndex(index)
     setModal(true)
@@ -105,15 +106,24 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
       <AddForm>
         {
           !isFormOpened && (
-            <button className="button button-plus" onClick={openForm}>
+            <motion.button
+              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: '-10%' }}
+              transition={{ duration: 0.15 }}
+              className="button button-plus"
+              onClick={openForm}
+            >
               <span className="button-icon" />
               <span className="button-text">Add item</span>
-            </button>
+            </motion.button>
           )
         }
         {
           isFormOpened && (
-            <form>
+            <motion.form
+              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, x: '-10%' }}
+            >
               <div className="input-box">
                 <input
                   className="input-box__input"
@@ -137,14 +147,14 @@ export const NodesTree: FC<NodesTreeProps> = ({ selected, updateSelected, nodes,
                   <span className="button-text">Cancel</span>
                 </button>
               </AddFormActions >
-            </form >
+            </motion.form >
           )
         }
       </AddForm >
       <Modal
         isShown={modal}
         keyName={deletebleKey}
-        titleText="Удаление хоста"
+        titleText="Delete host"
         hideModal={() => setModal(false)}
       >
         <ModalText>
