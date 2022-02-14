@@ -1,8 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
 
-import './models/init'
-
 import { NodesTree } from '../src/models/nodes_tree'
 import { ConfigNode } from './types';
 import { deleteNode, getNodes, saveNode } from './services/API';
@@ -22,7 +20,7 @@ export function App() {
     try {
       setLoad(true)
       const { response } = await getNodes()
-      const result = response.node.nodes.map((node: ConfigNode) => ({ ...node, value: JSON.parse(node.value) }));
+      const result = response?.node?.nodes?.map((node: ConfigNode) => ({ ...node, value: JSON.parse(node?.value) }));
       setNodes(result)
     } catch (error: any) {
       console.log(error?.message)
@@ -53,7 +51,7 @@ export function App() {
     const newNodes = [...nodes];
     newNodes[index].value = value;
     try {
-      const res = await saveNode(newNodes[index].key, newNodes[index])
+      const res = await saveNode(newNodes?.[index]?.key, newNodes?.[index])
       setNodes(newNodes);
       notifyMain('successfully updated')
     } catch (error: any) {
@@ -72,7 +70,7 @@ export function App() {
     try {
       setLoad(true)
       const res = await deleteNode(key);
-      const newNodes = nodes.filter(node => node.key !== key)
+      const newNodes = nodes?.filter(node => node?.key !== key)
       setNodes(newNodes)
       notifyMain('successfully deleted')
       if (selectedNodes.has(key)) {

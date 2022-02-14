@@ -45,12 +45,14 @@ export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
   const saveConfig = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
     updateData(index, data)
+    setCanSave(false)
   }
   const cancel = (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     e.preventDefault()
     if (editorRef.current !== null) {
       editorRef?.current?.set(node?.value || {});
     }
+    setCanSave(false)
   }
   const handleModeChange = (prevMode: string, nextMode: string) => {
     setMode(nextMode)

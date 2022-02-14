@@ -1,4 +1,4 @@
-import { Stack, alert, defaultModules } from '@pnotify/core'
+import { Stack, alert } from '@pnotify/core'
 import '@pnotify/core/dist/PNotify.css'
 import '@pnotify/confirm/dist/PNotifyConfirm.css'
 
