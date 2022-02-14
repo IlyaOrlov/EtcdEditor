@@ -57,8 +57,10 @@ export const Editor: FC<EditorProps> = ({ index, node, updateData }) => {
   }
   const handleChange = () => {
     const data = editorRef.current.get()
-    if (!canSave) {
+    if (!canSave && JSON.stringify(data) !== JSON.stringify(node?.value)) {
       setCanSave(true)
+    } else {
+      setCanSave(false)
     }
     if (!data) {
       setData('null')

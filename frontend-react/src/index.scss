@@ -353,3 +353,153 @@ button {
 }
 
 /* End Modal */
+
+/* Start Loader */
+
+$loaderCount: 10;
+$loaderTime: 2; //in seconds
+
+.loader-wrapper {
+	width: 100%;
+	height: 100%;
+	position: fixed;
+	z-index: 1002;
+	top: 0;
+	left: 0;
+	background-color: rgba(#fff, 0.7);
+}
+.loader {
+	width: 100px;
+	height: 100px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	animation: rotatePreloader $loaderTime + s infinite ease-in;
+}
+
+@keyframes rotatePreloader {
+	0% {
+		transform: translateX(-50%) translateY(-50%) rotateZ(0deg);
+	}
+	100% {
+		transform: translateX(-50%) translateY(-50%) rotateZ(-360deg);
+	}
+}
+
+.loader span {
+	display: block;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	opacity: 0;
+}
+.loader span::before {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: 0%;
+	width: 10%;
+	height: 10%;
+	background-color: #000;
+	transform: translateX(-50%);
+	border-radius: 50%;
+}
+
+@for $i from 1 through $loaderCount {
+	.loader span:nth-child(#{$i}) {
+		transform: rotateZ(((360 / $loaderCount) * ($i - 1)) + deg);
+		animation: rotateCircle + $i $loaderTime + s infinite linear;
+		z-index: $loaderCount - $i;
+	}
+	@keyframes rotateCircle#{$i} {
+		#{percentage(((50 / $loaderCount) * ($i - 1)) / 100)} {
+			opacity: 0;
+		}
+		#{percentage((((50 / $loaderCount) + 0.0001) * ($i - 1)) / 100)} {
+			opacity: 1;
+			transform: rotateZ((0 - ((360 / $loaderCount) * ($i - 2))) + deg);
+		}
+		#{percentage((((50 / $loaderCount) * ($i - 0)) + 2) / 100)} {
+			transform: rotateZ((0 - ((360 / $loaderCount) * ($i - 1))) + deg);
+		}
+		#{percentage(((50 + ((50 / $loaderCount) * ($i - 0))) + 2) / 100)} {
+			transform: rotateZ((0 - ((360 / $loaderCount) * ($i - 1))) + deg);
+		}
+		100% {
+			transform: rotateZ((0 - ((360 / $loaderCount) * ($loaderCount - 1))) + deg);
+			opacity: 1;
+		}
+	}
+}
+/* End Loader */
+
+/* Start Pnotify */
+.custom-notify {
+	.pnotify-container {
+		width: 285px !important;
+		padding: 18px 62px 18px 28px;
+		font-weight: 600;
+		font-size: 18px;
+		line-height: 27px;
+		color: #fff;
+		background-color: rgb(41, 39, 39);
+		border-radius: 10px;
+
+		.pnotify-title {
+			margin-bottom: 0;
+		}
+	}
+
+	.pnotify-text {
+		margin-top: 10px;
+	}
+
+	&.error {
+		.pnotify-container {
+			background-color: rgb(172, 8, 8);
+		}
+	}
+
+	.pnotify-closer {
+		position: absolute;
+		margin: 0;
+		width: 16px;
+		height: 16px;
+		top: 50%;
+		right: 18px;
+		transform: translateY(-50%);
+		transition: 0.3s;
+		&::before,
+		&::after {
+			content: "";
+			width: 100%;
+			height: 2px;
+			position: absolute;
+			top: 50%;
+			left: 0;
+			transform: translateY(-50%) rotate(-45deg);
+			background-color: #fff;
+		}
+		&::after {
+			transform: translateY(-50%) rotate(45deg);
+		}
+
+		&:hover {
+			transform: translateY(-50%) scale(1.2);
+		}
+
+		&:active {
+			transform: translateY(-50%) scale(0.9);
+		}
+	}
+
+	.pnotify-title {
+		color: white;
+		font-weight: 500;
+		font-size: 16px;
+		line-height: 20px;
+	}
+}
+
+/* End Pnotify */
