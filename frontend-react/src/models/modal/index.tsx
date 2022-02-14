@@ -1,4 +1,4 @@
-import React, {FC} from 'react'
+import React, { FC } from 'react'
 
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -64,7 +64,7 @@ export const Modal: FC<ModalProps> = ({ children, isShown, titleText, hideModal 
               </div>
               <div className="pp__content-body">
                 {children}
-             </div>
+              </div>
             </motion.div>
           </motion.div>
         </Portal>
