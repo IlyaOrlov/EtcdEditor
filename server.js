@@ -115,13 +115,13 @@ app.use((request, response, next) => {
 app.use(express.static(publicDir, {
     extensions: Object.keys(MIME_TYPES),
 }));
-app.use(express.static(path.join(__dirname, '/frontend-react/build')));
+app.use(express.static(path.join(__dirname, 'frontend-react', 'build')));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
-    res.sendFile(path.join(__dirname, '/frontend-react/build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'frontend-react', 'build', 'index.html'));
 });
 
 app.get('/api\/v2/keys', async (request, response) => {
