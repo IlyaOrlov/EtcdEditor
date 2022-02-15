@@ -25,7 +25,7 @@ async function getAll() {
     let nodes = [];
     for (let idx in kvs) {
         let key =  {
-            "key": '/' + idx,
+            "key": idx,
             "value": kvs[idx],
             "modifiedIndex": 0,
             "createdIndex": 0
@@ -35,7 +35,7 @@ async function getAll() {
     let res = {
         "action": "get",
         "node": {
-            "key": "/",
+            "key": "",
             "dir": true,
             "nodes": nodes
         }
@@ -49,7 +49,7 @@ async function get({ options, key }) {
     let res = {
         "action": "get",
         "node": {
-            "key": '/' + key,
+            "key": key,
             "value": val,
             "modifiedIndex": 0,
             "createdIndex": 0
@@ -63,7 +63,7 @@ async function put({ key, val }) {
     let res = {
         "action": "set",
         "node": {
-            "key": '/' + key,
+            "key": key,
             "value": val,
             "modifiedIndex": 0,
             "createdIndex": 0
@@ -77,10 +77,10 @@ async function del({ key }) {
     let res = {
         "action": "delete",
         "node": {
-            "key": "/" + key
+            "key": key
         },
         "prevNode": {
-            "key": "/" + key
+            "key": key
         }
     };
     return res;
