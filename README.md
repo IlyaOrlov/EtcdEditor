@@ -1,6 +1,11 @@
 
-# etcd editor
+# EtcdEditor
 
+## To build and run locally
+ * [Download](https://github.com/etcd-io/etcd/releases/) and run ETCD server
+ * Run **npm i** and **npm run build** in /frontend-react
+ * Run **server.js** and follow http://localhost:8000
+ 
 ## Inspirers
 [http://henszey.github.io/etcd-browser/](http://henszey.github.io/etcd-browser/)
 [https://github.com/josdejong/jsoneditor](https://github.com/josdejong/jsoneditor)
