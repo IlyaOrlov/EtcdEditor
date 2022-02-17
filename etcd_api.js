@@ -1,5 +1,6 @@
 // TODO throw exception if status of operation unsuccessful
 const fs = require('fs');
+const path = require('path');
 
 const { Etcd3 } = require('etcd3');
 const headers = {
@@ -13,9 +14,9 @@ const headers = {
 
 const etcdClient = new Etcd3({
     credentials: {
-        rootCertificate: fs.readFileSync(__dirname + 'cert_example/etcd-root-ca.pem'),
-        certChain: fs.readFileSync(__dirname + 'cert_example/client.pem'),
-        privateKey: fs.readFileSync(__dirname + 'cert_example/client-key.pem')
+        rootCertificate: fs.readFileSync(path.join(__dirname, 'cert_example', 'etcd-root-ca.pem')),
+        certChain: fs.readFileSync(path.join(__dirname, 'cert_example', 'client.pem')),
+        privateKey: fs.readFileSync(path.join(__dirname, 'cert_example', 'client-key.pem'))
     },
 });
 
