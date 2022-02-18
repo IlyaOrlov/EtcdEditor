@@ -2,7 +2,15 @@
 const fs = require('fs');
 const path = require('path');
 
-const { Etcd3 } = require('etcd3');
+const etcdHost = conf.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
+const etcdPort = conf.get('etcdPort') || process.env.ETCD_PORT || 4001;
+
+const caFile = conf.get('certAuth:caFile') || process.env.ETCDCTL_CA_FILE || false;
+const keyFile = conf.get('certAuth:keyFile') || process.env.ETCDCTL_KEY_FILE || false;
+const certFile = conf.get('certAuth:certFile') || process.env.ETCDCTL_CERT_FILE || false;
+
+const { Etcd3, GRPCUnavailableError } = require('etcd3');
+
 const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
@@ -20,10 +28,14 @@ const etcdClient = new Etcd3({
     },
 });
 
+/**
+ * can throw any other GRPC... kind of error 
+ * @param {object} param
+ * @returns {Promise<{}|Error|GRPCUnavailableError>}
+ */
 async function getAll() {
-    let kvs = await etcdClient.getAll().all();
-    let nodes = [];
-    for (let idx in kvs) {
+    const nodes = [];
+    for (let idx in await etcdClient.getAll().all()) {
         let key =  {
             "key": idx,
             "value": kvs[idx],
@@ -32,7 +44,7 @@ async function getAll() {
         };
         nodes.push(key);
     }
-    let res = {
+    return res = {
         "action": "get",
         "node": {
             "key": "",
@@ -40,13 +52,17 @@ async function getAll() {
             "nodes": nodes
         }
     };
-    return res;
 }
 
-
-async function get({ options, key }) {
-    let val = await etcdClient.get(key).string();
-    let res = {
+/**
+ * can throw any other GRPC... kind of error 
+ * @param {object} param
+ * @param {string} param.key
+ * @returns {Promise<{}|Error|GRPCUnavailableError>}
+ */
+async function get({ key }) {
+    const val = await etcdClient.get(key).string();
+    return res = {
         "action": "get",
         "node": {
             "key": key,
@@ -55,12 +71,18 @@ async function get({ options, key }) {
             "createdIndex": 0
         }
     };
-    return res;
 }
 
+/**
+ * can throw any other GRPC... kind of error 
+ * @param {object} param
+ * @param {string} param.key
+ * @param {any} param.value
+ * @returns {Promise<{}|Error|GRPCUnavailableError>}
+ */
 async function put({ key, val }) {
-    let status = await etcdClient.put(key).value(val);
-    let res = {
+    const status = await etcdClient.put(key).value(val);
+    return res = {
         "action": "set",
         "node": {
             "key": key,
@@ -69,12 +91,17 @@ async function put({ key, val }) {
             "createdIndex": 0
         }
     };
-    return res;
 }
 
+/**
+ * can throw any other GRPC... kind of error 
+ * @param {object} param
+ * @param {string} param.key
+ * @returns {Promise<{}|Error|GRPCUnavailableError>}
+ */
 async function del({ key }) {
-    let status = await etcdClient.delete().key(key);
-    let res = {
+    const status = await etcdClient.delete().key(key);
+    return {
         "action": "delete",
         "node": {
             "key": key
@@ -83,7 +110,6 @@ async function del({ key }) {
             "key": key
         }
     };
-    return res;
 }
 
 module.exports = {

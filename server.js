@@ -7,16 +7,15 @@ const etcdApi = require('./etcd_api');
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const etcdHost = conf.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
-const etcdPort = conf.get('etcdPort') || process.env.ETCD_PORT || 4001;
-const serverPort = conf.get('serverPort') || process.env.SERVER_PORT || 8000;
-const publicDir = conf.get('publicDir') || 'frontend';
-const authUser = conf.get('authUser') || process.env.AUTH_USER || '';
-const authPass = conf.get('authPass') || process.env.AUTH_PASS || '';
+require('./utils/validate_config')();
 
-const caFile = conf.get('caFile') || process.env.ETCDCTL_CA_FILE || false;
-const keyFile = conf.get('keyFile') || process.env.ETCDCTL_KEY_FILE || false;
-const certFile = conf.get('certFile') || process.env.ETCDCTL_CERT_FILE || false;
+const serverPort = conf.get('serverPort') || process.env.SERVER_PORT || 8000;
+
+const publicDir = conf.get('publicDir') || 'frontend';
+
+const auth_enabled = config.get('auth:enabled') || process.env.AUTH || false;
+const authUser = conf.get('auth:user') || process.env.AUTH_USER || '';
+const authPass = conf.get('auth:pass') || process.env.AUTH_PASS || '';
 
 const MIME_TYPES = {
     "html": "text/html",
@@ -28,19 +27,6 @@ const MIME_TYPES = {
 };
 
 const app = express();
-
-let opts = {
-    hostname: etcdHost,
-    port: etcdPort,
-};
-
-// https/certs support
-if (certFile) {
-    opts.key = fs.readFileSync(keyFile);
-    opts.ca = fs.readFileSync(caFile);
-    opts.cert = fs.readFileSync(certFile);
-}
-
 
 // view-server authentication
 function auth(req, res) {
@@ -63,45 +49,6 @@ function auth(req, res) {
     return (auth[1] === authUser && auth[2] === authPass)
 }
 
-// redirect requests to etcd-server
-async function proxy(client_req, client_res) {
-    let opts = {
-        hostname: etcdHost,
-        port: etcdPort,
-        path: client_req.url,
-        method: client_req.method
-    };
-
-    // https/certs support
-    if (certFile) {
-        opts.key = fs.readFileSync(keyFile);
-        opts.ca = fs.readFileSync(caFile);
-        opts.cert = fs.readFileSync(certFile);
-    }
-}
-
-
-// requester for communication with etcd-server
-let requester = http.request;
-if (certFile) {
-    // use https requests if theres a cert file
-    let https = require('https');
-    requester = https.request;
-
-    if (!fs.existsSync(certFile)) {
-        console.error('CERT FILE', certFile, 'not found!');
-        process.exit(1);
-    }
-    if (!fs.existsSync(keyFile)) {
-        console.error('KEY FILE', keyFile, 'not found!');
-        process.exit(1);
-    }
-    if (!fs.existsSync(caFile)) {
-        console.error('CA FILE', caFile, 'not found!');
-        process.exit(1);
-    }
-}
-
 app.use((request, response, next) => {
     if (!auth(request, response)) {
         response.statusCode = 401;
@@ -115,6 +62,7 @@ app.use((request, response, next) => {
 app.use(express.static(publicDir, {
     extensions: Object.keys(MIME_TYPES),
 }));
+
 app.use(express.static(path.join(__dirname, 'frontend-react', 'build')));
 
 app.use(bodyParser.urlencoded({ extended: false }));

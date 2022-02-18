@@ -9,11 +9,17 @@ conf.defaults(
         'etcdPort': 2379,
         'serverPort': 8000,
         'publicDir': 'frontend',
-        'authUser': '',
-        'authPass': '',
-        'caFile': '',
-        'keyFile': '',
-        'certFile': ''
+        'auth': {
+            'enabled': false,
+            'user': '',
+            'pass': '',
+        },
+        'certAuth': {
+            'enabled': false,
+            'caFile': '',
+            'keyFile': '',
+            'certFile': ''
+        }
     }
 );
 
