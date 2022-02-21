@@ -1,13 +1,10 @@
-// TODO throw exception if status of operation unsuccessful
+// TODO change instantiate logic for multiuser system
+
+const config = require('./utils/config');
 const fs = require('fs');
-const path = require('path');
 
-const etcdHost = conf.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
-const etcdPort = conf.get('etcdPort') || process.env.ETCD_PORT || 4001;
-
-const caFile = conf.get('certAuth:caFile') || process.env.ETCDCTL_CA_FILE || false;
-const keyFile = conf.get('certAuth:keyFile') || process.env.ETCDCTL_KEY_FILE || false;
-const certFile = conf.get('certAuth:certFile') || process.env.ETCDCTL_CERT_FILE || false;
+const etcdHost = config.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
+const etcdPort = config.get('etcdPort') || process.env.ETCD_PORT || 4001;
 
 const { Etcd3, GRPCUnavailableError } = require('etcd3');
 
@@ -20,13 +17,30 @@ const headers = {
     'X-Raft-Term': 0
 };
 
-const etcdClient = new Etcd3({
-    credentials: {
-        rootCertificate: fs.readFileSync(path.join(__dirname, 'cert_example', 'etcd-root-ca.pem')),
-        certChain: fs.readFileSync(path.join(__dirname, 'cert_example', 'client.pem')),
-        privateKey: fs.readFileSync(path.join(__dirname, 'cert_example', 'client-key.pem'))
-    },
-});
+const etcd_opts = {
+    host: `${etcdHost}:${etcdPort}`,
+};
+
+if (config.get('certAuth:enabled') || process.env.CERT_AUTH) {
+    const caFile = config.get('certAuth:caFile') || process.env.ETCDCTL_CA_FILE;
+    const keyFile = config.get('certAuth:keyFile') || process.env.ETCDCTL_KEY_FILE;
+    const certFile = config.get('certAuth:certFile') || process.env.ETCDCTL_CERT_FILE;
+
+    etcd_opts.credentials = {
+        rootCertificate: fs.readFileSync(caFile),
+        certChain: fs.readFileSync(certFile),
+        privateKey: fs.readFileSync(keyFile),
+    };
+}
+
+if (config.get('auth:enabled') || process.env.AUTH) {
+    etcd_opts.auth = {
+        username: config.get('auth:user') || process.env.AUTH_USER,
+        password: config.get('auth:pass') || process.env.AUTH_PASS,
+    };
+}
+
+const etcdClient = new Etcd3(etcd_opts);
 
 /**
  * can throw any other GRPC... kind of error 

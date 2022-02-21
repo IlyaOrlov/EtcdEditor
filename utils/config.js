@@ -15,10 +15,10 @@ conf.defaults(
             'pass': '',
         },
         'certAuth': {
-            'enabled': false,
-            'caFile': '',
-            'keyFile': '',
-            'certFile': ''
+            'enabled': true,
+            'caFile': path.join(__dirname, '..', 'cert_example', 'etcd-root-ca.pem'),
+            'keyFile': path.join(__dirname, '..', 'cert_example', 'client-key.pem'),
+            'certFile': path.join(__dirname, '..', 'cert_example', 'client.pem')
         }
     }
 );
