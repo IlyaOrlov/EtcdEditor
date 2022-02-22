@@ -17,9 +17,30 @@ const serverPort = config.get('serverPort') || process.env.SERVER_PORT || 8000;
 
 const publicDir = config.get('publicDir') || 'frontend';
 
+const etcd_opts = {};
+
 const auth_enabled = config.get('auth:enabled') || process.env.AUTH || false;
-const authUser = config.get('auth:user') || process.env.AUTH_USER || '';
-const authPass = config.get('auth:pass') || process.env.AUTH_PASS || '';
+const certAuth_enabled = config.get('certAuth:enabled') || process.env.CCERT_AUTH || false;
+
+// Single user or Multiuser?
+if (certAuth_enabled) {
+    const caFile = config.get('certAuth:caFile') || process.env.ETCDCTL_CA_FILE;
+    const keyFile = config.get('certAuth:keyFile') || process.env.ETCDCTL_KEY_FILE;
+    const certFile = config.get('certAuth:certFile') || process.env.ETCDCTL_CERT_FILE;
+
+    etcd_opts.credentials = {
+        rootCertificate: fs.readFileSync(caFile),
+        certChain: fs.readFileSync(certFile),
+        privateKey: fs.readFileSync(keyFile),
+    };
+}
+
+const makeEtcdOpts = () => {
+    if (auth_enabled) {
+        console.log('auth enabled');
+    }
+    console.log('auth enabled');
+};
 
 const MIME_TYPES = {
     "html": "text/html",
@@ -36,9 +57,16 @@ app.use(express.static(publicDir, {
     extensions: Object.keys(MIME_TYPES),
 }));
 
-app.use(basicAuth({
-    users: { 'admin': 'supersecret' }
-}));
+// Basic authorization middleware
+if (auth_enabled) {
+
+    app.use(basicAuth({
+        users: { 
+            [config.get('auth:user') || process.env.AUTH_USER]: config.get('auth:pass') || process.env.AUTH_PASS 
+        }
+    }));
+
+}
 
 app.use(express.static(path.join(__dirname, 'frontend-react', 'build')));
 
@@ -50,8 +78,9 @@ app.get('/', function (req, res) {
 });
 
 app.get('/api\/v2/keys', async (request, response) => {
+    makeEtcdOpts();
     try {
-        const res = await etcdApi.getAll();
+        const res = await etcdApi().getAll();
         response.status(200).send(res);
     } catch (e) {
         console.error(e);
@@ -73,7 +102,7 @@ app.put(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
 app.delete(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
     try {
         const { 0: key } = request.params;
-        const res = await etcdApi.del({ key: key });
+        const res = await etcdApi(etcd_opts).del({ key: key });
         response.status(200).send(res);
     } catch (e) {
         console.error(e);

@@ -1,12 +1,9 @@
-// TODO change instantiate logic for multiuser system
-
 const config = require('./utils/config');
 const fs = require('fs');
+const { Etcd3, GRPCUnavailableError } = require('etcd3');
 
 const etcdHost = config.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
 const etcdPort = config.get('etcdPort') || process.env.ETCD_PORT || 4001;
-
-const { Etcd3, GRPCUnavailableError } = require('etcd3');
 
 const headers = {
     "Content-Type": "application/json",
@@ -17,30 +14,11 @@ const headers = {
     'X-Raft-Term': 0
 };
 
+let etcdClient;
+
 const etcd_opts = {
-    host: `${etcdHost}:${etcdPort}`,
+    hosts: `${etcdHost}:${etcdPort}`,
 };
-
-if (config.get('certAuth:enabled') || process.env.CERT_AUTH) {
-    const caFile = config.get('certAuth:caFile') || process.env.ETCDCTL_CA_FILE;
-    const keyFile = config.get('certAuth:keyFile') || process.env.ETCDCTL_KEY_FILE;
-    const certFile = config.get('certAuth:certFile') || process.env.ETCDCTL_CERT_FILE;
-
-    etcd_opts.credentials = {
-        rootCertificate: fs.readFileSync(caFile),
-        certChain: fs.readFileSync(certFile),
-        privateKey: fs.readFileSync(keyFile),
-    };
-}
-
-if (config.get('auth:enabled') || process.env.AUTH) {
-    etcd_opts.auth = {
-        username: config.get('auth:user') || process.env.AUTH_USER,
-        password: config.get('auth:pass') || process.env.AUTH_PASS,
-    };
-}
-
-const etcdClient = new Etcd3(etcd_opts);
 
 /**
  * can throw any other GRPC... kind of error 
@@ -126,9 +104,23 @@ async function del({ key }) {
     };
 }
 
-module.exports = {
-    getAll: getAll,
-    get: get,
-    put: put,
-    del: del
+module.exports = ({credentials = null, auth = null, hosts = ''} = {}) => {
+
+    if (credentials) {
+        etcd_opts.credentials = credentials;
+    }   
+    
+    if (auth) {
+        etcd_opts.auth = auth;
+    }
+    
+    etcdClient = new Etcd3(etcd_opts);
+    
+    return {
+        getAll: getAll,
+        get: get,
+        put: put,
+        del: del
+    }
+
 };
