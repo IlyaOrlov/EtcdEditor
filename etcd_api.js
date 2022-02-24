@@ -106,6 +106,8 @@ async function del({ key }) {
 
 module.exports = ({credentials = null, auth = null, hosts = ''} = {}) => {
 
+    console.log(auth);
+
     if (credentials) {
         etcd_opts.credentials = credentials;
     }   

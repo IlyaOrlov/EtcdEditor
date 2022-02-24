@@ -11,8 +11,10 @@ conf.defaults(
         'publicDir': 'frontend',
         'auth': {
             'enabled': false,
-            'user': 'admin',
-            'pass': '123',
+            'users' : {
+                'admin': '123',
+                'dev': 'dev',
+            }   
         },
         'certAuth': {
             'enabled': true,

@@ -35,11 +35,24 @@ if (certAuth_enabled) {
     };
 }
 
-const makeEtcdOpts = () => {
+const buildEtcdOptsByConfig = ({ client_params, etcd_opts = {} }) => {
+
     if (auth_enabled) {
-        console.log('auth enabled');
+        etcd_opts.auth = {
+            username: client_params?.user,
+            password: client_params?.password,
+        };
     }
-    console.log('auth enabled');
+
+    if (certAuth_enabled) {
+        etcd_opts.credentials = {
+
+        }
+    }
+
+    console.log(etcd_opts);
+
+    return etcd_opts;
 };
 
 const MIME_TYPES = {
@@ -61,9 +74,7 @@ app.use(express.static(publicDir, {
 if (auth_enabled) {
 
     app.use(basicAuth({
-        users: { 
-            [config.get('auth:user') || process.env.AUTH_USER]: config.get('auth:pass') || process.env.AUTH_PASS 
-        }
+        users: config.get('auth:users')
     }));
 
 }
@@ -78,9 +89,9 @@ app.get('/', function (req, res) {
 });
 
 app.get('/api\/v2/keys', async (request, response) => {
-    makeEtcdOpts();
     try {
-        const res = await etcdApi().getAll();
+        const etcd_opts = buildEtcdOptsByConfig({ client_params: { ...request.body, ...request.auth } });
+        const res = await etcdApi({ ...etcd_opts }).getAll();
         response.status(200).send(res);
     } catch (e) {
         console.error(e);
