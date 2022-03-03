@@ -22,35 +22,27 @@ const etcd_opts = {};
 const auth_enabled = config.get('auth:enabled') || process.env.AUTH || false;
 const certAuth_enabled = config.get('certAuth:enabled') || process.env.CCERT_AUTH || false;
 
-// Single user or Multiuser?
-if (certAuth_enabled) {
-    const caFile = config.get('certAuth:caFile') || process.env.ETCDCTL_CA_FILE;
-    const keyFile = config.get('certAuth:keyFile') || process.env.ETCDCTL_KEY_FILE;
-    const certFile = config.get('certAuth:certFile') || process.env.ETCDCTL_CERT_FILE;
-
-    etcd_opts.credentials = {
-        rootCertificate: fs.readFileSync(caFile),
-        certChain: fs.readFileSync(certFile),
-        privateKey: fs.readFileSync(keyFile),
-    };
-}
-
-const buildEtcdOptsByConfig = ({ client_params, etcd_opts = {} }) => {
+const buildEtcdOptsByConfig = ({ client_request, etcd_opts = {} }) => {
 
     if (auth_enabled) {
         etcd_opts.auth = {
-            username: client_params?.user,
-            password: client_params?.password,
+            username: client_request.auth.user,
+            password: client_request.auth.password,
         };
     }
 
     if (certAuth_enabled) {
+
+        const caFile = config.get('certAuth:caFile') || process.env.ETCDCTL_CA_FILE;
+        const keyFile = config.get('certAuth:keyFile') || process.env.ETCDCTL_KEY_FILE;
+        // const certFile = config.get('certAuth:certFile') || process.env.ETCDCTL_CERT_FILE; // client certificate
+    
         etcd_opts.credentials = {
-
-        }
+            rootCertificate: fs.readFileSync(caFile),
+            certChain: client_request.body.certificate,
+            privateKey: fs.readFileSync(keyFile),
+        };
     }
-
-    console.log(etcd_opts);
 
     return etcd_opts;
 };
@@ -88,21 +80,11 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, 'frontend-react', 'build', 'index.html'));
 });
 
-app.get('/api\/v2/keys', async (request, response) => {
-    try {
-        const etcd_opts = buildEtcdOptsByConfig({ client_params: { ...request.body, ...request.auth } });
-        const res = await etcdApi({ ...etcd_opts }).getAll();
-        response.status(200).send(res);
-    } catch (e) {
-        console.error(e);
-        response.status(500).send('Error while processing request');
-    }
-});
-
 app.put(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
     try {
         const { 0: key } = request.params;
-        const res = await etcdApi.put({ key: key, val: JSON.stringify(request.body.value) });
+        const res = await etcdApi({ ...buildEtcdOptsByConfig({ client_request: request }) })
+            .put({ key: key, val: JSON.stringify(request.body.value) });
         response.status(200).send(res);
     } catch (e) {
         console.error(e);
@@ -110,15 +92,25 @@ app.put(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
     }
 });
 
-app.delete(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
+app.delete(/api\/v2\/keys\/([a-zA-Z0-9_]+)\/?/, async (request, response) => {
     try {
         const { 0: key } = request.params;
-        const res = await etcdApi(etcd_opts).del({ key: key });
+        const res = await etcdApi({ ...buildEtcdOptsByConfig({ client_request: request }) }).del({ key: key });
         response.status(200).send(res);
     } catch (e) {
         console.error(e);
         response.status(500).send('Error while processing request');
     }
+});
+app.post(/\/api\/v2\/keys\/?/, async (request, response) => {
+    console.log(request.body);
+    try {
+        const res = await etcdApi({ ...buildEtcdOptsByConfig({ client_request: request }) }).getAll();
+        response.status(200).send(res);
+    } catch (e) {
+        console.error(e);
+        response.status(500).send('Error while processing request');
+    };
 });
 
 app.listen(serverPort, () => {

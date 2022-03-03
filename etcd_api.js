@@ -27,10 +27,10 @@ const etcd_opts = {
  */
 async function getAll() {
     const nodes = [];
-    for (let idx in await etcdClient.getAll().all()) {
+    for (let [idx, val] of Object.entries(await etcdClient.getAll().all())) {
         let key =  {
             "key": idx,
-            "value": kvs[idx],
+            "value": val,
             "modifiedIndex": 0,
             "createdIndex": 0
         };
@@ -105,8 +105,6 @@ async function del({ key }) {
 }
 
 module.exports = ({credentials = null, auth = null, hosts = ''} = {}) => {
-
-    console.log(auth);
 
     if (credentials) {
         etcd_opts.credentials = credentials;
