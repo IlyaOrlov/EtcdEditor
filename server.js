@@ -22,8 +22,8 @@ const etcd_opts = (() => {
 
     if (auth_enabled) {
         etcd_opts.auth = {
-            username: client_request.auth.user,
-            password: client_request.auth.password,
+            username: config.get('auth:user:name'),
+            password: config.get('auth:user:pass'),
         };
     }
 
@@ -35,7 +35,7 @@ const etcd_opts = (() => {
     
         etcd_opts.credentials = {
             rootCertificate: fs.readFileSync(caFile),
-            certChain: certFile,
+            certChain: fs.readFileSync(certFile),
             privateKey: fs.readFileSync(keyFile),
         };
     }
