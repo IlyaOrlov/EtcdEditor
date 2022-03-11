@@ -18,6 +18,7 @@ const certAuth_enabled = config.get('certAuth:enabled') || process.env.CCERT_AUT
 
 const etcd_opts = (() => {
 
+    const etcd_opts = {};
     etcd_opts.hosts = `${etcdHost}:${etcdPort}`;
 
     if (auth_enabled) {
@@ -42,6 +43,7 @@ const etcd_opts = (() => {
 
     return etcd_opts;
 })();
+
 
 const etcdClient = etcdApi({ ...etcd_opts });
 
@@ -72,8 +74,9 @@ app.get('/', function (req, res) {
 app.put(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
     try {
         const { 0: key } = request.params;
-        const res = await etcdClient.put({ key: key, val: JSON.stringify(request.body.value) });
-        response.status(200).send(res);
+        response.status(200).send(
+            await etcdClient.put({ key: key, val: JSON.stringify(request.body.value) })
+        );
     } catch (e) {
         console.error(e);
         response.status(500).send('Error while processing request');
@@ -83,18 +86,15 @@ app.put(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
 app.delete(/api\/v2\/keys\/([a-zA-Z0-9_]+)\/?/, async (request, response) => {
     try {
         const { 0: key } = request.params;
-        const res = await etcdClient.del({ key: key });
-        response.status(200).send(res);
+        response.status(200).send(await etcdClient.del({ key: key }));
     } catch (e) {
         console.error(e);
         response.status(500).send('Error while processing request');
     }
 });
-app.post(/\/api\/v2\/keys\/?/, async (request, response) => {
-    console.log(request.body);
+app.get(/api\/v2\/keys\/?/, async (request, response) => {
     try {
-        const res = await etcdClient.getAll();
-        response.status(200).send(res);
+        response.status(200).send(await etcdClient.getAll());
     } catch (e) {
         console.error(e);
         response.status(500).send('Error while processing request');

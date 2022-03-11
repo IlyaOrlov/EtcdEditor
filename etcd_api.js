@@ -28,18 +28,17 @@ const etcd_opts = {
 async function getAll() {
     const nodes = [];
     for (let [idx, val] of Object.entries(await etcdClient.getAll().all())) {
-        let key =  {
+        nodes.push({
             "key": idx,
             "value": val,
             "modifiedIndex": 0,
             "createdIndex": 0
-        };
-        nodes.push(key);
+        });
     }
     return res = {
         "action": "get",
         "node": {
-            "key": "",
+            "key": "/",
             "dir": true,
             "nodes": nodes
         }
@@ -53,12 +52,11 @@ async function getAll() {
  * @returns {Promise<{}|Error|GRPCUnavailableError>}
  */
 async function get({ key }) {
-    const val = await etcdClient.get(key).string();
     return res = {
         "action": "get",
         "node": {
             "key": key,
-            "value": val,
+            "value": await etcdClient.get(key).string(),
             "modifiedIndex": 0,
             "createdIndex": 0
         }
@@ -104,7 +102,9 @@ async function del({ key }) {
     };
 }
 
-module.exports = ({credentials = null, auth = null, hosts = ''} = {}) => {
+module.exports = ({ hosts, credentials = null, auth = null } = {}) => {
+
+    etcd_opts.hosts = hosts;
 
     if (credentials) {
         etcd_opts.credentials = credentials;

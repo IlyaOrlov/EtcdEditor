@@ -12,8 +12,8 @@ conf.defaults(
         'auth': {
             'enabled': false,
             'user' : {
-                'name': 'admin', 
-                'pass': '123',
+                'name': 'root', 
+                'pass': 'root',
             }   
         },
         'certAuth': {
