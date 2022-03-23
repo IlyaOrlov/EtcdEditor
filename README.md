@@ -12,7 +12,7 @@
 
 ### Configuration
 You can configure the builtin server using environment variables:
-
+ * AUTH: boolean. enable, disable basic auth
  * AUTH_USER: Username for http basic auth (skip to disable auth)
  * AUTH_PASS: Password for http basic auth
  * ETCD_HOST: IP of the etcd host the internal proxy should use [172.17.42.1]
@@ -20,6 +20,7 @@ You can configure the builtin server using environment variables:
  * SERVER_PORT: Port of builtin server
  
 If you use a secured etcd:
+ * CERTH_AUTH: Boolean. enable, disable authorization by certs
  * ETCDCTL_CA_FILE
  * ETCDCTL_KEY_FILE
  * ETCDCTL_CERT_FILE
@@ -30,3 +31,8 @@ If you use a secured etcd:
 
 # ETCD RUN 
  ./etcd --name infra0 --data-dir infra0   --client-cert-auth --trusted-ca-file=cert_example/etcd-root-ca.pem --cert-file=cert_example/server.pem --key-file=cert_example/server-key.pem   --advertise-client-urls https://127.0.0.1:2379 --listen-client-urls https://127.0.0.1:2379
+ clent request: curl --cacert /home/art/projects/EtcdEditor/cert_example/etcd-root-ca.pem --cert /home/art/projects/EtcdEditor/cert_example/client.pem --key /home/art/projects/EtcdEditor/cert_example/client.pem -L https://127.0.0.1:2379/v2/keys
+
+ # ENABLE|DISABLE BASIC AUTH ON ETCD
+    ./etcdctl auth enable
+    ./etcdctl auth disable

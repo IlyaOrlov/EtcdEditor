@@ -9,11 +9,19 @@ conf.defaults(
         'etcdPort': 2379,
         'serverPort': 8000,
         'publicDir': 'frontend',
-        'authUser': '',
-        'authPass': '',
-        'caFile': '',
-        'keyFile': '',
-        'certFile': ''
+        'auth': {
+            'enabled': false,
+            'user' : {
+                'name': 'root', 
+                'pass': 'root',
+            }   
+        },
+        'certAuth': {
+            'enabled': false,
+            'caFile': path.join(__dirname, '..', 'cert_example', 'etcd-root-ca.pem'),
+            'keyFile': path.join(__dirname, '..', 'cert_example', 'client-key.pem'),
+            'certFile': path.join(__dirname, '..', 'cert_example', 'client.pem')
+        }
     }
 );
 

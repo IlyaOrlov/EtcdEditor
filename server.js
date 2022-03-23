@@ -1,22 +1,67 @@
-const url = require('url');
 const path = require('path');
 const fs = require('fs');
-const http = require('http');
-const conf = require('./utils/config');
+const config = require('./utils/config');
 const etcdApi = require('./etcd_api');
 const express = require('express');
 const bodyParser = require('body-parser');
+const child_process = require('child_process');
 
-const etcdHost = conf.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
-const etcdPort = conf.get('etcdPort') || process.env.ETCD_PORT || 4001;
-const serverPort = conf.get('serverPort') || process.env.SERVER_PORT || 8000;
-const publicDir = conf.get('publicDir') || 'frontend';
-const authUser = conf.get('authUser') || process.env.AUTH_USER || '';
-const authPass = conf.get('authPass') || process.env.AUTH_PASS || '';
+require('./utils/validate_config')();
 
-const caFile = conf.get('caFile') || process.env.ETCDCTL_CA_FILE || false;
-const keyFile = conf.get('keyFile') || process.env.ETCDCTL_KEY_FILE || false;
-const certFile = conf.get('certFile') || process.env.ETCDCTL_CERT_FILE || false;
+const serverPort = config.get('serverPort') || process.env.SERVER_PORT || 8000;
+const publicDir = config.get('publicDir') || 'frontend';
+
+const etcdHost = config.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
+const etcdPort = config.get('etcdPort') || process.env.ETCD_PORT || 4001;
+
+const auth_enabled = process.env.AUTH || config.get('auth:enabled') || false;
+const certAuth_enabled = process.env.CCERT_AUTH || config.get('certAuth:enabled') || false;
+
+const etcd_opts = (() => {
+
+    const etcd_opts = {};
+    etcd_opts.hosts = `${etcdHost}:${etcdPort}`;
+
+    if (certAuth_enabled) {
+        if (!etcd_opts.hosts.startsWith('https://')) {
+            throw new Error('Etcd host must be under the https\'s protocol');
+        }
+        /* child_process.exec(`./etcd --name infra0 --data-dir infra0   --client-cert-auth --trusted-ca-file=cert_example/etcd-root-ca.pem 
+                           --cert-file=cert_example/server.pem --key-file=cert_example/server-key.pem   --advertise-client-urls`, 
+                           (error, stdout, stderr) => {
+                                console.log(error, stdout, stderr);
+                           });
+        */
+        const caFile = process.env.ETCDCTL_CA_FILE || config.get('certAuth:caFile');
+        const keyFile = process.env.ETCDCTL_KEY_FILE || config.get('certAuth:keyFile');
+        const certFile = process.env.ETCDCTL_CERT_FILE || config.get('certAuth:certFile'); // client certificate
+    
+        etcd_opts.credentials = {
+            rootCertificate: fs.readFileSync(caFile),
+            certChain: fs.readFileSync(certFile),
+            privateKey: fs.readFileSync(keyFile),
+        };
+    } else if (auth_enabled) {
+        /* child_process.exec('./etcd && ./etcdctl auth enable --user root --password root',
+         (error, stdout, stderr) => {
+             console.log(error, stdout, stderr);
+         }); */
+        etcd_opts.auth = {
+            username: process.env.AUTH_USER || config.get('auth:user:name'),
+            password: process.env.AUTH_PASS || config.get('auth:user:pass'),
+        };
+    } else {
+        /* child_process.exec('./etcd && ./etcdctl auth disable --user root --password root',
+         (error, stdout, stderr) => {
+             console.log(error, stdout, stderr);
+         }); */
+    }
+
+    return etcd_opts;
+})();
+
+
+const etcdClient = etcdApi({ ...etcd_opts });
 
 const MIME_TYPES = {
     "html": "text/html",
@@ -29,92 +74,10 @@ const MIME_TYPES = {
 
 const app = express();
 
-let opts = {
-    hostname: etcdHost,
-    port: etcdPort,
-};
-
-// https/certs support
-if (certFile) {
-    opts.key = fs.readFileSync(keyFile);
-    opts.ca = fs.readFileSync(caFile);
-    opts.cert = fs.readFileSync(certFile);
-}
-
-
-// view-server authentication
-function auth(req, res) {
-    if (!authUser) return true;
-
-    let auth = req.headers.authorization;
-    if (!auth) return false;
-
-    // malformed
-    const parts = auth.split(' ');
-    if (parts[0].toLowerCase() !== 'basic') return false;
-    if (!parts[1]) return false;
-    auth = parts[1];
-
-    // credentials
-    auth = Buffer(auth, 'base64').toString();
-    auth = auth.match(/^([^:]*):(.*)$/);
-    if (!auth) return false;
-
-    return (auth[1] === authUser && auth[2] === authPass)
-}
-
-// redirect requests to etcd-server
-async function proxy(client_req, client_res) {
-    let opts = {
-        hostname: etcdHost,
-        port: etcdPort,
-        path: client_req.url,
-        method: client_req.method
-    };
-
-    // https/certs support
-    if (certFile) {
-        opts.key = fs.readFileSync(keyFile);
-        opts.ca = fs.readFileSync(caFile);
-        opts.cert = fs.readFileSync(certFile);
-    }
-}
-
-
-// requester for communication with etcd-server
-let requester = http.request;
-if (certFile) {
-    // use https requests if theres a cert file
-    let https = require('https');
-    requester = https.request;
-
-    if (!fs.existsSync(certFile)) {
-        console.error('CERT FILE', certFile, 'not found!');
-        process.exit(1);
-    }
-    if (!fs.existsSync(keyFile)) {
-        console.error('KEY FILE', keyFile, 'not found!');
-        process.exit(1);
-    }
-    if (!fs.existsSync(caFile)) {
-        console.error('CA FILE', caFile, 'not found!');
-        process.exit(1);
-    }
-}
-
-app.use((request, response, next) => {
-    if (!auth(request, response)) {
-        response.statusCode = 401;
-        response.setHeader('WWW-Authenticate', 'Basic realm="MyRealmName"');
-        response.end('Unauthorized');
-        return;
-    }
-    next();
-});
-
 app.use(express.static(publicDir, {
     extensions: Object.keys(MIME_TYPES),
 }));
+
 app.use(express.static(path.join(__dirname, 'frontend-react', 'build')));
 
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -124,36 +87,34 @@ app.get('/', function (req, res) {
     res.sendFile(path.join(__dirname, 'frontend-react', 'build', 'index.html'));
 });
 
-app.get('/api\/v2/keys', async (request, response) => {
-    try {
-        const res = await etcdApi.getAll();
-        response.status(200).send(res);
-    } catch (e) {
-        console.error(e);
-        response.status(500).send('Error while processing request');
-    }
-});
-
 app.put(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
     try {
         const { 0: key } = request.params;
-        const res = await etcdApi.put({ key: key, val: JSON.stringify(request.body.value) });
-        response.status(200).send(res);
+        response.status(200).send(
+            await etcdClient.put({ key: key, val: JSON.stringify(request.body.value) })
+        );
     } catch (e) {
         console.error(e);
         response.status(500).send('Error while processing request');
     }
 });
 
-app.delete(/api\/v2\/keys\/([a-zA-Z0-9_]+)/, async (request, response) => {
+app.delete(/api\/v2\/keys\/([a-zA-Z0-9_]+)\/?/, async (request, response) => {
     try {
         const { 0: key } = request.params;
-        const res = await etcdApi.del({ key: key });
-        response.status(200).send(res);
+        response.status(200).send(await etcdClient.del({ key: key }));
     } catch (e) {
         console.error(e);
         response.status(500).send('Error while processing request');
     }
+});
+app.get(/api\/v2\/keys\/?/, async (request, response) => {
+    try {
+        response.status(200).send(await etcdClient.getAll());
+    } catch (e) {
+        console.error(e);
+        response.status(500).send('Error while processing request');
+    };
 });
 
 app.listen(serverPort, () => {

@@ -1,8 +1,9 @@
-// TODO throw exception if status of operation unsuccessful
-const fs = require('fs');
-const path = require('path');
+const config = require('./utils/config');
+const { Etcd3, GRPCUnavailableError } = require('etcd3');
 
-const { Etcd3 } = require('etcd3');
+const etcdHost = config.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
+const etcdPort = config.get('etcdPort') || process.env.ETCD_PORT || 4001;
+
 const headers = {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
@@ -12,55 +13,65 @@ const headers = {
     'X-Raft-Term': 0
 };
 
-const etcdClient = new Etcd3({
-    credentials: {
-        rootCertificate: fs.readFileSync(path.join(__dirname, 'cert_example', 'etcd-root-ca.pem')),
-        certChain: fs.readFileSync(path.join(__dirname, 'cert_example', 'client.pem')),
-        privateKey: fs.readFileSync(path.join(__dirname, 'cert_example', 'client-key.pem'))
-    },
-});
+let etcdClient;
 
+const etcd_opts = {
+    hosts: `${etcdHost}:${etcdPort}`,
+};
+
+/**
+ * can throw any other GRPC... kind of error 
+ * @param {object} param
+ * @returns {Promise<{}|Error|GRPCUnavailableError>}
+ */
 async function getAll() {
-    let kvs = await etcdClient.getAll().all();
-    let nodes = [];
-    for (let idx in kvs) {
-        let key =  {
-            "key": idx,
-            "value": kvs[idx],
+    const nodes = [];
+    for (let [idx, val] of Object.entries(await etcdClient.getAll().all())) {
+        nodes.push({
+            "key": idx.startsWith('/') ? idx : `/${idx}`,
+            "value": val,
             "modifiedIndex": 0,
             "createdIndex": 0
-        };
-        nodes.push(key);
+        });
     }
-    let res = {
+    return res = {
         "action": "get",
         "node": {
-            "key": "",
+            "key": "/",
             "dir": true,
             "nodes": nodes
         }
     };
-    return res;
 }
 
-
-async function get({ options, key }) {
-    let val = await etcdClient.get(key).string();
-    let res = {
+/**
+ * can throw any other GRPC... kind of error 
+ * @param {object} param
+ * @param {string} param.key
+ * @returns {Promise<{}|Error|GRPCUnavailableError>}
+ */
+async function get({ key }) {
+    return res = {
         "action": "get",
         "node": {
             "key": key,
-            "value": val,
+            "value": await etcdClient.get(key).string(),
             "modifiedIndex": 0,
             "createdIndex": 0
         }
     };
-    return res;
 }
 
+/**
+ * can throw any other GRPC... kind of error 
+ * @param {object} param
+ * @param {string} param.key
+ * @param {any} param.value
+ * @returns {Promise<{}|Error|GRPCUnavailableError>}
+ */
 async function put({ key, val }) {
-    let status = await etcdClient.put(key).value(val);
-    let res = {
+    const status = await etcdClient.put(key).value(val);
+    return res = {
         "action": "set",
         "node": {
             "key": key,
@@ -69,12 +80,17 @@ async function put({ key, val }) {
             "createdIndex": 0
         }
     };
-    return res;
 }
 
+/**
+ * can throw any other GRPC... kind of error 
+ * @param {object} param
+ * @param {string} param.key
+ * @returns {Promise<{}|Error|GRPCUnavailableError>}
+ */
 async function del({ key }) {
-    let status = await etcdClient.delete().key(key);
-    let res = {
+    const status = await etcdClient.delete().key(key);
+    return {
         "action": "delete",
         "node": {
             "key": key
@@ -83,12 +99,29 @@ async function del({ key }) {
             "key": key
         }
     };
-    return res;
 }
 
-module.exports = {
-    getAll: getAll,
-    get: get,
-    put: put,
-    del: del
+module.exports = ({ hosts, credentials = null, auth = null } = {}) => {
+
+    if (hosts) {
+        etcd_opts.hosts = hosts;
+    }
+    
+    if (credentials) {
+        etcd_opts.credentials = credentials;
+    }   
+    
+    if (auth) {
+        etcd_opts.auth = auth;
+    }
+    
+    etcdClient = new Etcd3(etcd_opts);
+    
+    return {
+        getAll: getAll,
+        get: get,
+        put: put,
+        del: del
+    }
+
 };
