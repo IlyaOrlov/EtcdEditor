@@ -17,7 +17,7 @@ conf.defaults(
             }   
         },
         'certAuth': {
-            'enabled': true,
+            'enabled': false,
             'caFile': path.join(__dirname, '..', 'cert_example', 'etcd-root-ca.pem'),
             'keyFile': path.join(__dirname, '..', 'cert_example', 'client-key.pem'),
             'certFile': path.join(__dirname, '..', 'cert_example', 'client.pem')

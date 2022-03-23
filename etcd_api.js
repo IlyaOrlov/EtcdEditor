@@ -1,5 +1,4 @@
 const config = require('./utils/config');
-const fs = require('fs');
 const { Etcd3, GRPCUnavailableError } = require('etcd3');
 
 const etcdHost = config.get('etcdHost') || process.env.ETCD_HOST || '0.0.0.0';
@@ -29,7 +28,7 @@ async function getAll() {
     const nodes = [];
     for (let [idx, val] of Object.entries(await etcdClient.getAll().all())) {
         nodes.push({
-            "key": idx,
+            "key": idx.startsWith('/') ? idx : `/${idx}`,
             "value": val,
             "modifiedIndex": 0,
             "createdIndex": 0
@@ -104,8 +103,10 @@ async function del({ key }) {
 
 module.exports = ({ hosts, credentials = null, auth = null } = {}) => {
 
-    etcd_opts.hosts = hosts;
-
+    if (hosts) {
+        etcd_opts.hosts = hosts;
+    }
+    
     if (credentials) {
         etcd_opts.credentials = credentials;
     }   
